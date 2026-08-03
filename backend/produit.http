@@ -1,0 +1,237 @@
+### ==========================================
+### MODULE PRODUITS
+### ==========================================
+
+### Récupérer tous les produits
+GET http://localhost:8080/api/produits
+
+### Créer un téléphone Samsung
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Telephone Samsung Galaxy S21",
+  "description": "Téléphone intelligent Samsung Galaxy S21 avec écran AMOLED, processeur puissant et appareil photo haute résolution.",
+  "prix": 300000, 
+  "quantite": 12
+}
+
+### Créer un téléphone tecno
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Telephone Tecno Spark 9T",
+  "description": "Téléphone intelligent tecno Spark 9T avec écran AMOLED, processeur puissant et appareil photo haute résolution.",
+  "prix": 75000, 
+  "quantite": 15
+}
+
+### Créer un téléphone Huawei
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Telephone Huawei P30 Pro",
+  "description": "Téléphone intelligent Huawei P30 Pro avec écran AMOLED, processeur puissant et appareil photo haute résolution.",
+  "prix": 250000, 
+  "quantite": 10
+}
+
+### Créer un Iphone
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Telephone iphone 13 Pro Max",
+  "description": "Téléphone intelligent iphone 13 Pro Max avec écran AMOLED, processeur puissant et appareil photo haute résolution.",
+  "prix": 350000, 
+  "quantite": 20
+}
+
+### Créer un Iphone
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Telephone iphone 17 Pro Max",
+  "description": "Téléphone intelligent iphone 17 Pro Max avec écran AMOLED, processeur puissant et appareil photo haute résolution.",
+  "prix": 300000, 
+  "quantite": 16
+}
+
+### Créer un Macbook Pro
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Macbook Pro 16 pouces",
+  "description": "Ordinateur portable Macbook Pro 16 pouces avec processeur M1 Pro, 16Go de RAM et SSD 512Go. Ecran tatile 15.6 pouces, carte graphique dédiée NVIDIA GeForce GTX 1650.",
+  "prix": 5000000,
+  "quantite": 10
+}
+
+### Créer un Macbook Air
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Macbook Air 13 pouces",
+  "description": "Ordinateur portable Macbook Air 13 pouces avec processeur M1, 8Go de RAM et SSD 256Go.",
+  "prix": 4000000,
+  "quantite": 10
+}
+
+### Créer un Macbook de bureau
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Macbook de bureau",
+  "description": "Ordinateur de bureau Macbook avec processeur M1 Pro, 16Go de RAM et SSD 512Go.",
+  "prix": 6000000,
+  "quantite": 10
+}
+
+### Créer un PC HP
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "PC HP -Core i5 - 16Go RAM -SSD 512Go",
+  "description": "Ordinateur portable HP avec processeur Core i5, 16Go de RAM et SSD 512Go.",
+  "prix": 300000, 
+  "quantite": 12
+}
+
+### Créer un PC HP
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "PC HP -Core i7 - 32Go RAM -SSD 1To",
+  "description": "Ordinateur portable HP avec processeur Core i7, 32Go de RAM et SSD 1To. Ecran tatile 15.6 pouces, piable, carte graphique dédiée NVIDIA GeForce GTX 1650.",
+  "prix": 400000, 
+  "quantite": 15
+}
+
+### Créer un PC Dell
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "PC Dell -Core i5 - 16Go RAM -SSD 512Go",
+  "description": "Ordinateur portable Dell avec processeur Core i5, 16Go de RAM et SSD 512Go.",
+  "prix": 300000, 
+  "quantite": 12
+}
+
+### Créer un PC Lenovo
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "PC LENOVO -Core i5 - 16Go RAM -SSD 512Go",
+  "description": "Ordinateur portable LENOVO avec processeur Core i5, 16Go de RAM et SSD 512Go.",
+  "prix": 300000, 
+  "quantite": 12
+}
+
+### Créer un PC Lenovo
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "PC LENOVO -Core i7 - 32Go RAM -SSD 1To",
+  "description": "Ordinateur portable LENOVO avec processeur Core i7, 32Go de RAM et SSD 1To. Ecran tatile 15.6 pouces, piable, carte graphique dédiée NVIDIA GeForce GTX 1650.",
+  "prix": 400000, 
+  "quantite": 15
+}
+
+### Créer une clé USB
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Clé USB 64Go",
+  "description": "Clé USB 3.0 Kingston 64Go - Haute vitesse.",
+  "prix": 5000, 
+  "quantite": 50
+}
+
+### Créer un disque  dur externe
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Disque dur externe 1To",
+  "description": "Disque dur externe SSD 1To - Antichoc USB-C.",
+  "prix": 50000, 
+  "quantite": 25
+}
+
+### Créer un disque  dur externe
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Disque dur externe 500Go",
+  "description": "Disque dur externe SSD 500Go - Antichoc USB-C.",
+  "prix": 40000, 
+  "quantite": 25
+}
+
+### Créer un chargeur HP
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Chargeur HP",
+  "description": "Adaptateur secteur 65W - Embout bleu 4.5mm",
+  "prix": 30000,
+  "quantite": 15
+}
+
+### Créer un chargeur Lenovo
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Chargeur Lenovo",
+  "description": "Bloc alimentation 90W - Connecteur rectangulaire",
+  "prix": 30000,
+  "quantite": 11
+}
+
+### Créer un chargeur Dell
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Chargeur Dell",
+  "description": "Chargeur Dell 130W - Connecteur USB-C Haute Performance",
+  "prix": 30000,
+  "quantite": 8
+}
+
+### Créer une batterie externe pour ordinateur
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Batterie externe ordinateur",
+  "description": "Power Bank 20000mAh - Sortie USB-C PD 65W",
+  "prix": 45000,
+  "quantite": 12
+}
+
+### Créer une batterie externe pour ordinateur
+POST http://localhost:8080/api/produits
+Content-Type: application/json
+
+{
+  "nom": "Batterie PC/Moblie",
+  "description": "Power Bank 40000mAh - 2 ports USB-A + 2 ports USB-C PD 100W",
+  "prix": 45000,
+  "quantite": 12
+}

@@ -1,0 +1,140 @@
+### ==========================================
+### MODULE COMMANDES
+### ==========================================
+
+### Récupérer toutes les commandes
+GET http://localhost:8080/api/commandes
+
+### Commande 1 : Achat de consommables informatiques de base
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 1,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 1, "quantite": 5 },
+    { "produitId": 3, "quantite": 2 }
+  ]
+}
+
+### Commande 2 : Gros lot de matériel pour un bureau
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 2,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 4, "quantite": 10 },
+    { "produitId": 5, "quantite": 1 },
+    { "produitId": 12, "quantite": 4 }
+  ]
+}
+
+### Commande 3 : Commande d'équipements réseau et câbles
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 11,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 8, "quantite": 3 },
+    { "produitId": 16, "quantite": 15 }
+  ]
+}
+
+### Commande 4 : Renouvellement de stockage externe
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 3,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 17, "quantite": 2 },
+    { "produitId": 18, "quantite": 5 }
+  ]
+}
+
+### Commande 5 : Achat de chargeurs de rechange (Évite le 27 !)
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 4,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 19, "quantite": 1 },
+    { "produitId": 26, "quantite": 2 },
+    { "produitId": 28, "quantite": 3 }
+  ]
+}
+
+### Commande 6 : Équipement complet pour un nouveau développeur
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 12,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 2, "quantite": 1 },
+    { "produitId": 15, "quantite": 1 },
+    { "produitId": 30, "quantite": 1 }
+  ]
+}
+
+### Commande 7 : Petit réassort de périphériques
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 6,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 29, "quantite": 6 },
+    { "produitId": 10, "quantite": 2 }
+  ]
+}
+
+### Commande 8 : Commande combinée écrans et accessoires
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 13,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 6, "quantite": 2 },
+    { "produitId": 7, "quantite": 4 },
+    { "produitId": 20, "quantite": 2 }
+  ]
+}
+
+### Commande 9 : Achat groupé de clés USB et connectique
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 18,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 16, "quantite": 20 }
+  ]
+}
+
+### Commande 10 : Achat mixte haute valeur (Vérification finale du calcul de prix)
+POST http://localhost:8080/api/commandes
+Content-Type: application/json
+
+{
+  "clientId": 20,
+  "dateCommande": "2026-07-19",
+  "lignes": [
+    { "produitId": 11, "quantite": 1 },
+    { "produitId": 22, "quantite": 2 },
+    { "produitId": 25, "quantite": 5 }
+  ]
+}

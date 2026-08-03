@@ -1,0 +1,138 @@
+### ==========================================
+### MODULE CLIENTS
+### ==========================================
+
+### Récupérer tous les clients
+GET http://localhost:8080/api/clients
+
+### Créer le premier client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Meïté",
+  "prenom": "Kounadi Teguera",
+  "email": "meite@example.com",
+  "telephone": "0700000000"
+}
+
+### Créer le deuxième client (Jean Marc)
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Kouassi",
+  "prenom": "Jean Marc",      
+  "email": "jeanmarc@email.com",
+  "telephone": "0701020304"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Meité",
+  "prenom": "Kassa",
+  "email": "kassa@email.com",
+  "telephone": "0545082984"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Bamba",
+  "prenom": "Siaka",
+  "email": "bamba@email.com",
+  "telephone": "0506182984"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Samassi",
+  "prenom": "Aminata",
+  "email": "samassi@email.com",
+  "telephone": "0506254897"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Coulibaly",
+  "prenom": "Amadou",
+  "email": "coulibaly@email.com",
+  "telephone": "0779584261"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Bakayoko",
+  "prenom": "Moussa",
+  "email": "bakayoko@email.com",
+  "telephone": "0768949288"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Koné",
+  "prenom": "Rodrigue",
+  "email": "koné@email.com",
+  "telephone": "0790949288"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Cissé",
+  "prenom": "Daouda",
+  "email": "cissé@email.com",
+  "telephone": "0768941436"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Makadi",
+  "prenom": "Idriss",
+  "email": "makadi@email.com",
+  "telephone": "0768258788"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Sanago",
+  "prenom": "Ben Hamed",
+  "email": "sanago@email.com",
+  "telephone": "0768949288"
+}
+
+### Créer un autre client
+POST http://localhost:8080/api/clients
+Content-Type: application/json
+
+{
+  "nom": "Traoré",
+  "prenom": "Zeinab",
+  "email": "zeze@email.com",
+  "telephone": "0767728105"
+}
