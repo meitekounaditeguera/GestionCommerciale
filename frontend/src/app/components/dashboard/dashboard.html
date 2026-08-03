@@ -1,0 +1,44 @@
+<h2 class="mb-4">
+    📊 Tableau de bord
+</h2>
+<div class="row g-3 mb-4">
+  <!-- Carte Clients -->
+  <div class="col-md-3">
+    <div class="card bg-primary text-white shadow-sm border-0">
+      <div class="card-body">
+        <h6 class="card-title text-white-50">Clients</h6>
+        <h2 class="display-6 fw-bold mb-0">{{totalClients}}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte Produits -->
+  <div class="col-md-3">
+    <div class="card bg-success text-white shadow-sm border-0">
+      <div class="card-body">
+        <h6 class="card-title text-white-50">Produits</h6>
+        <h2 class="display-6 fw-bold mb-0">{{totalProduits}}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte Commandes -->
+  <div class="col-md-3">
+    <div class="card bg-warning text-dark shadow-sm border-0">
+      <div class="card-body">
+        <h6 class="card-title text-dark-50">Commandes</h6>
+        <h2 class="display-6 fw-bold mb-0">{{totalCommandes}}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte Chiffre d'affaires -->
+  <div class="col-md-3">
+    <div class="card bg-danger text-white shadow-sm border-0">
+      <div class="card-body">
+        <h6 class="card-title text-white-50">Chiffre d'affaires</h6>
+        <h2 class="display-6 fw-bold mb-0">{{ chiffreAffaires | number:'1.0-0' }} FCFA</h2>
+      </div>
+    </div>
+  </div>
+</div>

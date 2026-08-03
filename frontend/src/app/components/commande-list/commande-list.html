@@ -1,0 +1,186 @@
+@if (messageSucces != '') {
+
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+
+    {{ messageSucces }}
+
+  </div>
+
+}
+
+<h2>Nouvelle commande</h2>
+
+<p>
+
+  <label>Client ID :</label><br>
+  <select [(ngModel)]="nouvelleCommande.clientId">
+
+  <option [ngValue]="0">
+    -- Sélectionner un client --
+  </option>
+
+  @for (client of clients; track client.id) {
+
+    <option [ngValue]="client.id">
+      {{ client.nom }} {{ client.prenom }}
+    </option>
+
+  }
+
+  </select>
+
+</p>
+
+<p>
+  <label>Date :</label><br>
+  <input
+    type="date"
+    [(ngModel)]="nouvelleCommande.dateCommande">
+</p>
+
+<button class="btn btn-success" (click)="ajouterCommande()">
+  💾 Enregistrer la commande
+</button>
+
+<h3>Ajouter un produit</h3>
+
+<p>
+  <label>Produit :</label><br>
+
+  <select [(ngModel)]="nouvelleLigne.produitId">
+
+    <option [ngValue]="0">
+      -- Sélectionner un produit --
+    </option>
+
+    @for (produit of produits; track produit.id) {
+
+      <option [ngValue]="produit.id">
+        {{ produit.nom }}
+      </option>
+
+    }
+
+  </select>
+
+</p>
+
+<p>
+  <label>Quantité :</label><br>
+
+  <input
+    type="number"
+    min="1"
+    [(ngModel)]="nouvelleLigne.quantite">
+
+</p>
+
+<button type="button" class="btn btn-outline-secondary"  (click)="ajouterLigne()">
+➕ Ajouter à la commande
+</button>
+
+<hr>
+
+<h3>Produits de la commande</h3>
+
+<div class="table-responsive">
+
+<table class="table table-striped table-hover table-bordered align-middle">
+
+  <thead>
+
+    <tr>
+
+      <th>Produit</th>
+
+      <th>Prix unitaire</th>
+
+      <th>Quantité</th>
+
+      <th>Sous-total</th>
+
+      <th>Action</th>
+
+    </tr>
+    
+  </thead>
+
+  <tbody>
+
+    @for (ligne of nouvelleCommande.lignes; track $index) {
+
+      <tr>
+
+        <td>{{ getNomProduit(ligne.produitId) }}</td>
+
+        <td>{{ getPrixProduit(ligne.produitId) | number }} FCFA</td>
+
+        <td>{{ ligne.quantite }}</td>
+
+        <td>{{ getPrixProduit(ligne.produitId) * ligne.quantite | number }} FCFA</td>
+
+        <td>
+          <button (click)="supprimerLigne($index)">
+            ❌ Retirer
+          </button>
+        </td>
+
+      </tr>
+
+    }
+
+  </tbody>
+
+</table>
+
+</div>
+
+<hr>
+
+<h3> Montant total :{{ calculerMontantTotal() }} FCFA</h3>
+
+<h2>Liste des commandes</h2>
+
+<div class="table-responsive">
+
+<table class="table table-striped table-hover table-bordered align-middle">
+
+  <thead>
+
+    <tr>
+      <th>ID</th>
+
+      <th>Date</th>
+
+      <th>Client</th>
+
+      <th>Montant</th>
+
+    </tr>
+    
+  </thead>
+
+  <tbody>
+
+    @for (commande of commandes; track commande.id) {
+
+      <tr>
+
+        <td>{{ commande.id }}</td>
+
+        <td>{{ commande.dateCommande }}</td>
+
+        <td>{{ commande.clientId }}</td>
+
+        <td>{{ commande.montantTotal | number }} FCFA</td>
+        
+
+      </tr>
+
+    }
+
+  </tbody>
+
+</table>
+
+</div>

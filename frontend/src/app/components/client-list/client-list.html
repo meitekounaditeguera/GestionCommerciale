@@ -1,0 +1,244 @@
+<!-- ========================= -->
+<!-- Formulaire d'ajout d'un client -->
+<!-- ========================= -->
+
+<!-- Notification de succès -->
+@if (messageSucces) {
+
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+
+    ✅ {{ messageSucces }}
+
+  </div>
+}
+
+@if (messageErreur) {
+
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
+    ⚠️ {{ messageErreur }}
+
+  </div>
+}
+
+<!-- AJOUT DE LA CARD BOOTSTRAP -->
+<!-- Formulaire d'ajout / modification de Client -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <h5 class="fw-bold mb-3">👤 Nouveau client</h5>
+
+    <form #clientForm="ngForm" (ngSubmit)="ajouterClient(clientForm)">
+      <div class="row g-3">
+        
+        <!-- Nom -->
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Nom *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="nouveauClient.nom" 
+            name="nom" 
+            required 
+            #nomInput="ngModel"
+            placeholder="Ex: Kouassi">
+          @if (nomInput.invalid && (nomInput.touched || clientForm.submitted)) {
+            <small class="text-danger">Le nom est obligatoire.</small>
+          }
+        </div>
+
+        <!-- Prénom -->
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Prénom *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="nouveauClient.prenom" 
+            name="prenom" 
+            required 
+            #prenomInput="ngModel"
+            placeholder="Ex: Jean">
+          @if (prenomInput.invalid && (prenomInput.touched || clientForm.submitted)) {
+            <small class="text-danger">Le prénom est obligatoire.</small>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Email *</label>
+          <input 
+            type="email" 
+            class="form-control" 
+            [(ngModel)]="nouveauClient.email" 
+            name="email" 
+            required 
+            email
+            #emailInput="ngModel"
+            placeholder="Ex: jean.kouassi@email.com">
+          @if (emailInput.invalid && (emailInput.touched || clientForm.submitted)) {
+            <small class="text-danger">Veuillez renseigner un email valide (ex: exemple&#64;domaine.com).</small>
+          }
+        </div>
+
+        <!-- Téléphone (10 chiffres requis) -->
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Téléphone (10 chiffres) *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="nouveauClient.telephone" 
+            name="telephone" 
+            required 
+            pattern="^[0-9]{10}$"
+            #telInput="ngModel"
+            placeholder="Ex: 0102030405">
+          @if (telInput.invalid && (telInput.touched || clientForm.submitted)) {
+            <small class="text-danger">Le numéro doit comporter exactement 10 chiffres.</small>
+          }
+        </div>
+
+      </div>
+
+      <!-- Message d'erreur global si tentative de validation -->
+      @if (clientForm.invalid && clientForm.submitted) {
+        <div class="alert alert-warning mt-3 py-2 small" role="alert">
+          ⚠️ Veuillez corriger les champs en rouge avant d'ajouter le client.
+        </div>
+      }
+
+      <div class="mt-4">
+        <button type="submit" class="btn btn-primary px-4">
+          Ajouter le client
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- FIN DE LA CARD BOOTSTRAP -->
+
+<hr>
+
+<!-- Barre de recherche moderne -->
+<div class="row mb-3">
+  <div class="col-md-6 col-lg-4">
+    <div class="input-group shadow-sm">
+      <!-- Icône Loupe -->
+      <span class="input-group-text bg-white border-end-0" id="search-addon">
+        🔍
+      </span>
+      <!-- Champ de saisie -->
+      <input 
+        type="text" 
+        class="form-control border-start-0 ps-0" 
+        placeholder="Rechercher un client..." 
+        [(ngModel)]="recherche" 
+        (input)="filtrerClients()"
+        aria-describedby="search-addon">
+    </div>
+  </div>
+</div>
+
+<!-- ========================= -->
+<!-- Liste des clients -->
+<!-- ========================= -->
+
+<h2>Liste des clients</h2>
+
+<div class="table-responsive">
+
+<table class="table table-striped table-hover table-bordered align-middle">
+
+  <thead>
+
+    <tr>
+
+      <th>ID</th>
+
+      <th (click)="trier('nom')" style="cursor:pointer">
+      Nom
+      </th>
+
+      <th (click)="trier('prenom')" style="cursor:pointer">
+      Prénom
+      </th>
+
+      <th (click)="trier('email')" style="cursor:pointer">
+      Email
+      </th>
+
+      <th> Téléphone </th>
+
+      <th> Action </th>
+
+    </tr>
+
+  </thead>
+
+  <tbody>
+
+    @for (client of clientsPagination; track client.id) {
+
+      <tr>
+
+        <td>{{ client.id }}</td>
+
+        <td>{{ client.nom }}</td>
+
+        <td>{{ client.prenom }}</td>
+
+        <td>{{ client.email }}</td>
+
+        <td>{{ client.telephone }}</td>
+
+        <td>
+          
+         <!-- Au clic, on charge le client dans le formulaire -->
+         <button class="btn btn-warning" (click)="modifierClient(client)">
+
+         ✏️ Modifier
+
+         </button>
+
+         <!-- Au clic, on supprime le client -->
+         <button class="btn btn-danger ms-1" (click)="supprimerClient(client.id!)">
+
+            🗑️ Supprimer
+
+          </button>
+
+        </td>
+
+      </tr>
+
+    }
+
+  </tbody>
+
+</table>
+
+</div>
+
+<div class="mt-3">
+  <button class="btn btn-secondary me-2"
+   (click)="pagePrecedente()"
+   [disabled]="pageActuelle === 1">
+
+  ⬅ Précédent
+
+  </button>
+
+  <span>
+
+  Page {{ pageActuelle }}
+  sur
+  {{ nombrePages }}
+
+  </span>
+
+  <button class="btn btn-secondary ms-2"
+   (click)="pageSuivante()"
+   [disabled]="pageActuelle === nombrePages">
+
+  Suivant ➡
+
+  </button>
+</div>
