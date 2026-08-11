@@ -1,0 +1,39 @@
+<app-navbar></app-navbar>
+
+<div class="container mt-4">
+  @if (authService.hasAnyRole(['ROLE_ADMIN', 'ROLE_GESTIONNAIRE'])) {
+    <app-dashboard></app-dashboard>
+
+    <hr>
+  }
+
+  <app-client-list></app-client-list>
+
+  <hr>
+
+  <app-produit-list></app-produit-list>
+
+  <hr>
+
+  <app-commande-list></app-commande-list>
+
+  <hr>
+
+  <app-historique-stock></app-historique-stock>
+
+  @if (authService.hasAnyRole(['ROLE_ADMIN', 'ROLE_GESTIONNAIRE'])) {
+    <hr>
+
+    <app-fournisseur-list></app-fournisseur-list>
+
+    <hr>
+
+    <app-commande-fournisseur></app-commande-fournisseur>
+  }
+
+  @if (authService.hasRole('ROLE_ADMIN')) {
+    <hr>
+
+    <app-audit-logs></app-audit-logs>
+  }
+</div>

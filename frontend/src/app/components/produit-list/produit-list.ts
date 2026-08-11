@@ -1,9 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { Produit } from '../../models/produit';
 import { ProduitService } from '../../services/produit.service';
+import { DataRefreshService } from '../../services/data-refresh.service';
+import { AuthService } from '../../services/auth.service';
+import { StockService } from '../../services/stock.service';
+import { ExcelExportService } from '../../services/excel-export.service';
+import { ScannerCodeBarresComponent } from '../scanner-code-barres/scanner-code-barres';
 
 // Colonnes sur lesquelles le tri est autorisé.
 type ColonneTriable = 'nom' | 'prix' | 'quantite';
@@ -15,7 +20,8 @@ type ColonneTriable = 'nom' | 'prix' | 'quantite';
   imports: [
 
   CommonModule,
-  FormsModule
+  FormsModule,
+  ScannerCodeBarresComponent
 
 ],
 
@@ -24,23 +30,28 @@ type ColonneTriable = 'nom' | 'prix' | 'quantite';
 })
 export class ProduitListComponent implements OnInit {
 
-  // Liste des produits
+  // Produits de la page actuellement chargée depuis le backend.
   produits: Produit[] = [];
+  // Vue affichée : les produits de la page courante, éventuellement filtrés par la recherche.
+  produitsFiltres: Produit[] = [];
   messageSucces: string = '';
   messageErreur: string = '';
+  private minuteurMessage?: ReturnType<typeof setTimeout>;
 
 // ===============================
-// PAGINATION
+// PAGINATION (pilotée par le backend : Spring Boot renvoie un Page<ProduitDTO>)
 // ===============================
 
-// Page actuellement affichée.
-pageCourante = 1;
+// Index de la page courante, base 0 (comme côté Spring Boot).
+pageCourante = 0;
 
-// Nombre de produits affichés par page.
-produitsParPage = 5;
+// Nombre total de pages renvoyé par le backend (jamais recalculé manuellement).
+totalPages = 1;
 
-  // Liste complète des produits.
-tousLesProduits: Produit[] = [];
+totalElements = 0;
+
+// Nombre de produits par page : fixé à 5 pour tous les appels HTTP.
+private readonly taillePage = 5;
 
 // Texte saisi dans la zone de recherche.
 recherche = '';
@@ -51,37 +62,72 @@ nouveauProduit: Produit = {
   nom: '',
   description: '',
   prix: 0,
-  quantite: 0
+  quantite: 0,
+  categorie: '',
+  codeBarre: ''
 
 };
+
+// Affiche ou masque la modale de scan caméra.
+scannerOuvert = false;
 
 // Contient l'identifiant du produit en cours de modification.
 // null signifie que le formulaire est en mode "Ajout".
 produitEnModification: number | null = null;
-  produitsFitres: Produit[] = [];
 
-  constructor(private produitService: ProduitService) {}
+// Identifiants des produits dont la suppression est en cours : permet de désactiver
+// le bouton "Supprimer" correspondant pour empêcher un double clic d'envoyer deux
+// requêtes DELETE (et donc deux lignes dans le journal d'audit).
+idsEnSuppression = new Set<number>();
+
+  // ===============================
+  // RÉAPPROVISIONNEMENT (entrée de stock)
+  // ===============================
+
+  // Produit ciblé par le panneau de réapprovisionnement (null = panneau fermé).
+  produitAReapprovisionner: Produit | null = null;
+  quantiteEntree: number = 1;
+  motifEntree: string = '';
+
+  constructor(
+    private produitService: ProduitService,
+    private dataRefreshService: DataRefreshService,
+    public authService: AuthService,
+    private stockService: StockService,
+    private excelExportService: ExcelExportService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
+    this.chargerProduits();
+  }
 
-    console.log("Chargement des produits...");
+  // Charge une page de produits depuis le backend (page=0&size=5 par défaut).
+  chargerProduits(page: number = 0): void {
 
-    this.produitService.getProduits().subscribe({
+    this.produitService.getProduits(page, this.taillePage).subscribe({
 
-      next: (data) => {
+      next: (reponse: any) => {
 
-        console.log(data);
+        // Accepte un Page Spring Boot (cas normal) ou, par sécurité, un tableau brut.
+        this.produits = reponse?.content ?? (Array.isArray(reponse) ? reponse : []);
+        this.produitsFiltres = [...this.produits];
 
-        this.tousLesProduits = data;
-        this.produits = data;
-        this.produitsFitres = [...data];
+        // Ne jamais recalculer totalPages à partir de produits.length : ce tableau ne
+        // contient que les éléments de la page courante, pas le total. On ne recalcule
+        // manuellement que si le backend ne renvoie pas totalPages du tout.
+        this.totalPages = reponse?.totalPages !== undefined
+          ? (reponse.totalPages > 0 ? reponse.totalPages : 1)
+          : (Math.ceil(this.produits.length / this.taillePage) || 1);
+        this.pageCourante = reponse?.number ?? page;
+        this.totalElements = reponse?.totalElements ?? this.produits.length;
+        this.cdr.markForCheck();
 
       },
 
       error: (err) => {
-
-        console.error("Erreur :", err);
-
+        console.error('Erreur lors du chargement des produits :', err);
+        this.cdr.markForCheck();
       }
 
     });
@@ -93,7 +139,7 @@ produitEnModification: number | null = null;
   // Validation : le prix doit être strictement supérieur à 0.
   if (!this.nouveauProduit.prix || this.nouveauProduit.prix <= 0) {
     this.messageErreur = 'Le prix doit être supérieur à 0.';
-    setTimeout(() => (this.messageErreur = ''), 3000);
+    setTimeout(() => { this.messageErreur = ''; this.cdr.markForCheck(); }, 5000);
     return;
   }
 
@@ -111,21 +157,17 @@ produitEnModification: number | null = null;
 
         next: () => {
 
-          // Recharge toute la liste depuis le backend.
-          this.produitService.getProduits().subscribe(data => {
-
-              this.tousLesProduits = data;
-              this.produits = data;
-              this.produitsFitres = [...data];
-
-          });
+          // Recharge la page courante depuis le backend.
+          this.chargerProduits(this.pageCourante);
 
           // Réinitialise le formulaire.
           this.nouveauProduit = {
             nom: '',
             description: '',
             prix: 0,
-            quantite: 0
+            quantite: 0,
+            categorie: '',
+            codeBarre: ''
           };
 
           // Retour au mode Ajout.
@@ -133,12 +175,17 @@ produitEnModification: number | null = null;
 
           // Message de succès pour modification
           this.messageSucces = 'Produit mis à jour avec succès !';
-          setTimeout(() => (this.messageSucces = ''), 3000);
+          this.viderMessageApresDelai();
+          this.dataRefreshService.notifyDataChanged();
+          this.cdr.markForCheck();
 
         },
 
         error: (err) => {
           console.error(err);
+          this.messageErreur = err.error?.codeBarre ?? err.error ?? "Impossible d'enregistrer le produit.";
+          this.viderMessageApresDelai();
+          this.cdr.markForCheck();
         }
 
       });
@@ -156,30 +203,31 @@ produitEnModification: number | null = null;
 
       next: () => {
 
-        // Recharge la liste.
-        this.produitService.getProduits().subscribe(data => {
-
-            this.tousLesProduits = data;
-            this.produits = data;
-            this.produitsFitres = [...data];
-
-      });
+        // Recharge la page courante depuis le backend.
+        this.chargerProduits(this.pageCourante);
 
         // Vide le formulaire.
         this.nouveauProduit = {
           nom: '',
           description: '',
           prix: 0,
-          quantite: 0
+          quantite: 0,
+          categorie: '',
+          codeBarre: ''
         };
 
         // Message de succès pour ajout
         this.messageSucces = 'Produit ajouté avec succès !';
-        setTimeout(() => (this.messageSucces = ''), 3000);
+        this.viderMessageApresDelai();
+        this.dataRefreshService.notifyDataChanged();
+        this.cdr.markForCheck();
       },
 
       error: (err) => {
         console.error(err);
+        this.messageErreur = err.error?.codeBarre ?? err.error ?? "Impossible d'ajouter le produit.";
+        this.viderMessageApresDelai();
+        this.cdr.markForCheck();
       }
 
     });
@@ -206,7 +254,9 @@ annulerModification(): void {
     nom: '',
     description: '',
     prix: 0,
-    quantite: 0
+    quantite: 0,
+    categorie: '',
+    codeBarre: ''
   };
   // 2. On repasse à null pour revenir au mode "Ajout"
   this.produitEnModification = null;
@@ -214,85 +264,124 @@ annulerModification(): void {
 
 // Supprime un produit de la base de données.
 supprimerProduit(id: number): void {
+  // 0. Le bouton est déjà désactivé pendant que la requête est en cours, mais on
+  // se protège aussi ici contre un second appel programmatique.
+  if (this.idsEnSuppression.has(id)) {
+    return;
+  }
+
   // 1. Demande de confirmation préalable
   if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+
+    this.idsEnSuppression.add(id);
+
     this.produitService.supprimerProduit(id).subscribe({
       next: () => {
-        // 2. Message de succès
-        alert('Le produit a été supprimé avec succès !');
-
-        // 3. Mise à jour immédiate de la liste en mémoire (évite le double clic/rechargement)
+        // 2. Retrait immédiat de la ligne supprimée : l'utilisateur la voit
+        // disparaître dès la réponse du backend, sans attendre un second appel.
         this.produits = this.produits.filter(p => p.id !== id);
-        this.produitsFitres = this.produitsFitres.filter(p => p.id !== id);
-        this.tousLesProduits = this.tousLesProduits.filter(p => p.id !== id);
+        this.produitsFiltres = this.produitsFiltres.filter(p => p.id !== id);
+        this.idsEnSuppression.delete(id);
+
+        // 3. Message de succès
+        this.messageSucces = 'Produit supprimé avec succès !';
+        this.viderMessageApresDelai();
+
+        // 4. Recharge la page courante depuis le backend : après une suppression,
+        // le nombre total de pages peut changer.
+        this.chargerProduits(this.pageCourante);
+        this.dataRefreshService.notifyDataChanged();
+        this.cdr.markForCheck();
       },
       error: (err) => {
+        this.idsEnSuppression.delete(id);
         console.error('Erreur lors de la suppression du produit :', err);
         alert('Impossible de supprimer ce produit.');
+        this.cdr.markForCheck();
       }
     });
   }
 }
 
-// Recherche des produits par nom, en temps réel.
+private viderMessageApresDelai(): void {
+  clearTimeout(this.minuteurMessage);
+  this.minuteurMessage = setTimeout(() => {
+    this.messageSucces = '';
+    this.messageErreur = '';
+    this.cdr.markForCheck();
+  }, 3000);
+}
+
+// Recherche des produits par nom, en temps réel. Ne filtre que la page actuellement
+// chargée (5 produits) : une recherche sur l'ensemble du catalogue nécessiterait un
+// paramètre de recherche côté backend, hors de ce périmètre.
 rechercherProduit(): void {
 
   const valeur = this.recherche.toLowerCase().trim();
 
-  this.produits = this.tousLesProduits.filter(produit =>
+  this.produitsFiltres = this.produits.filter(produit =>
 
     produit.nom.toLowerCase().includes(valeur)
 
   );
 
-  // Retour à la première page pour éviter une pagination hors limites.
-  this.pageCourante = 1;
+}
+
+// ===============================
+// SCAN CAMÉRA (code-barres / QR code)
+// ===============================
+
+ouvrirScanner(): void {
+  this.scannerOuvert = true;
+}
+
+fermerScanner(): void {
+  this.scannerOuvert = false;
+}
+
+// Un code a été détecté par la caméra : on recherche le produit correspondant sur
+// l'ensemble du catalogue (pas seulement la page affichée) et on l'affiche seul dans
+// le tableau, comme le ferait une recherche par nom.
+onCodeScanne(code: string): void {
+
+  this.produitService.rechercherParCodeBarre(code).subscribe({
+
+    next: (produit) => {
+      this.recherche = produit.nom;
+      this.produitsFiltres = [produit];
+      this.messageSucces = `Produit trouvé : ${produit.nom}`;
+      this.viderMessageApresDelai();
+      this.cdr.markForCheck();
+    },
+
+    error: (err) => {
+      console.error('Erreur lors de la recherche par code-barres :', err);
+      this.messageErreur = `Aucun produit ne correspond au code scanné : ${code}`;
+      this.viderMessageApresDelai();
+      this.cdr.markForCheck();
+    }
+
+  });
 
 }
 
-// Retourne le nombre total de pages.
-get nombrePages(): number {
-
-  return Math.ceil(
-    this.produits.length / this.produitsParPage
-  );
-
-}
-
-// Retourne uniquement les produits
-// de la page actuellement affichée.
-get produitsPagine(): Produit[] {
-
-  const debut =
-    (this.pageCourante - 1) * this.produitsParPage;
-
-  return this.produits.slice(
-
-    debut,
-
-    debut + this.produitsParPage
-
-  );
-
-}
-
-// Passe à la page suivante.
+// Passe à la page suivante (backend : pageCourante + 1).
 pageSuivante(): void {
 
-  if (this.pageCourante < this.nombrePages) {
+  if (this.pageCourante < this.totalPages - 1) {
 
-    this.pageCourante++;
+    this.chargerProduits(this.pageCourante + 1);
 
   }
 
 }
 
-// Revient à la page précédente.
+// Revient à la page précédente (backend : pageCourante - 1).
 pagePrecedente(): void {
 
-  if (this.pageCourante > 1) {
+  if (this.pageCourante > 0) {
 
-    this.pageCourante--;
+    this.chargerProduits(this.pageCourante - 1);
 
   }
 
@@ -310,7 +399,7 @@ colonneTri: ColonneTriable = 'nom';
 // false = ordre décroissant
 ordreCroissant = true;
 
-// Trie les produits selon la colonne sélectionnée.
+// Trie les produits de la page actuellement affichée.
 trier(colonne: ColonneTriable): void {
 
   // Si on clique deux fois sur la même colonne,
@@ -326,7 +415,7 @@ trier(colonne: ColonneTriable): void {
 
   }
 
-  this.produits.sort((a, b) => {
+  this.produitsFiltres.sort((a, b) => {
 
     if (a[colonne] < b[colonne]) {
       return this.ordreCroissant ? -1 : 1;
@@ -337,6 +426,89 @@ trier(colonne: ColonneTriable): void {
     }
 
     return 0;
+
+  });
+
+}
+
+// Ouvre le panneau de réapprovisionnement pour le produit sélectionné.
+ouvrirReapprovisionnement(produit: Produit): void {
+  this.produitAReapprovisionner = produit;
+  this.quantiteEntree = 1;
+  this.motifEntree = '';
+}
+
+// Ferme le panneau sans enregistrer.
+fermerReapprovisionnement(): void {
+  this.produitAReapprovisionner = null;
+}
+
+// Enregistre l'entrée de stock puis rafraîchit la page courante.
+confirmerReapprovisionnement(): void {
+
+  if (!this.produitAReapprovisionner || !this.quantiteEntree || this.quantiteEntree <= 0) {
+    this.messageErreur = 'La quantité doit être supérieure à 0.';
+    this.viderMessageApresDelai();
+    this.cdr.markForCheck();
+    return;
+  }
+
+  this.stockService.enregistrerEntree({
+    produitId: this.produitAReapprovisionner.id!,
+    quantite: this.quantiteEntree,
+    motif: this.motifEntree
+  }).subscribe({
+
+    next: () => {
+
+      this.messageSucces = 'Stock réapprovisionné avec succès !';
+      this.viderMessageApresDelai();
+      this.fermerReapprovisionnement();
+
+      this.chargerProduits(this.pageCourante);
+      this.dataRefreshService.notifyDataChanged();
+      this.cdr.markForCheck();
+
+    },
+
+    error: (err) => {
+      console.error("Erreur lors de l'entrée de stock :", err);
+      this.messageErreur = "Impossible d'enregistrer l'entrée de stock.";
+      this.viderMessageApresDelai();
+      this.cdr.markForCheck();
+    }
+
+  });
+
+}
+
+// Exporte tous les produits (pas seulement la page affichée) vers un fichier Excel.
+exporterProduits(): void {
+
+  // On redemande l'ensemble des produits au backend : la vue affichée est paginée
+  // à 5 éléments, mais l'export doit couvrir tout le catalogue.
+  this.produitService.getProduits(0, 10000).subscribe({
+
+    next: (reponse) => {
+
+      const entetes = ['Identifiant / Réf', 'Nom du produit', 'Catégorie', 'Prix (FCFA)', 'Quantité en Stock'];
+
+      const lignes = reponse.content.map(produit => [
+        produit.id ?? '',
+        produit.nom,
+        produit.categorie || 'Non catégorisé',
+        produit.prix,
+        produit.quantite
+      ]);
+
+      this.excelExportService.exportToExcel(entetes, lignes, 'produits', 'Produits');
+
+    },
+
+    error: (err) => {
+      console.error("Erreur lors de l'export des produits :", err);
+      alert("Impossible d'exporter les produits.");
+    }
 
   });
 

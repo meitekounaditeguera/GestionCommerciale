@@ -1,12 +1,13 @@
 package com.gestioncommerciale.backend.service;
 
-import com.gestioncommerciale.backend.dto.ClientDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import com.gestioncommerciale.backend.dto.ClientDTO;
 
 public interface ClientService {
 
-    List<ClientDTO> getAllClients();
+    Page<ClientDTO> getAllClients(Pageable pageable);
 
     ClientDTO getClientById(Long id);
 

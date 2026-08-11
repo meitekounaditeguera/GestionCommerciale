@@ -53,6 +53,18 @@
           <label class="form-label text-muted small fw-bold">Quantité en stock</label>
           <input type="number" class="form-control" [(ngModel)]="nouveauProduit.quantite" name="quantite" placeholder="0" required>
         </div>
+
+        <!-- Catégorie -->
+        <div class="col-md-4">
+          <label class="form-label text-muted small fw-bold">Catégorie</label>
+          <input type="text" class="form-control" [(ngModel)]="nouveauProduit.categorie" name="categorie" placeholder="Ex: Informatique">
+        </div>
+
+        <!-- Code-barres -->
+        <div class="col-md-4">
+          <label class="form-label text-muted small fw-bold">Code-barres / QR code</label>
+          <input type="text" class="form-control" [(ngModel)]="nouveauProduit.codeBarre" name="codeBarre" placeholder="Ex: 3401234567890">
+        </div>
       </div>
 
       <!-- Boutons d'action -->
@@ -75,22 +87,30 @@
 <hr>
 
 <!-- Barre de recherche moderne -->
-<div class="row mb-3">
+<div class="row mb-3 align-items-center">
   <div class="col-md-6 col-lg-4">
     <div class="input-group shadow-sm">
       <!-- Icône Loupe -->
-      <span class="input-group-text bg-white border-end-0" id="search-addon">
+      <span class="input-group-text border-end-0" id="search-addon">
         🔍
       </span>
       <!-- Champ de saisie -->
-      <input 
-        type="text" 
-        class="form-control border-start-0 ps-0" 
-        placeholder="Rechercher un produit..." 
-        [(ngModel)]="recherche" 
+      <input
+        type="text"
+        class="form-control border-start-0 ps-0"
+        placeholder="Rechercher un produit..."
+        [(ngModel)]="recherche"
         (input)="rechercherProduit()"
         aria-describedby="search-addon">
     </div>
+  </div>
+  <div class="col-auto ms-auto d-flex gap-2">
+    <button class="btn btn-outline-primary" (click)="ouvrirScanner()">
+      <i class="bi bi-camera-fill"></i> Scanner un produit
+    </button>
+    <button class="btn btn-success" (click)="exporterProduits()">
+      <i class="bi bi-file-earmark-excel-fill"></i> Exporter les produits
+    </button>
   </div>
 </div>
 
@@ -114,6 +134,10 @@
 
       <th>Description</th>
 
+      <th>Catégorie</th>
+
+      <th>Code-barres</th>
+
       <th
       style="cursor:pointer"
       (click)="trier('prix')">
@@ -134,7 +158,7 @@
 
   <tbody>
 
-    @for (produit of produitsPagine; track produit.id) {
+    @for (produit of produitsFiltres; track produit.id) {
 
       <tr>
 
@@ -143,6 +167,10 @@
         <td>{{ produit.nom }}</td>
 
         <td>{{ produit.description }}</td>
+
+        <td>{{ produit.categorie || '—' }}</td>
+
+        <td>{{ produit.codeBarre || '—' }}</td>
 
         <td>{{ produit.prix | number }} FCFA</td>
 
@@ -180,11 +208,23 @@
 
          </button>
 
-         <button class="btn btn-danger ms-1" (click)="supprimerProduit(produit.id!)">
+         @if (authService.hasAnyRole(['ROLE_ADMIN', 'ROLE_GESTIONNAIRE'])) {
+           <button class="btn btn-outline-success ms-1" (click)="ouvrirReapprovisionnement(produit)">
 
-          🗑️ Supprimer
+             📦 Réapprovisionner
 
-         </button>
+           </button>
+         }
+
+         @if (authService.hasRole('ROLE_ADMIN')) {
+           <button class="btn btn-danger ms-1"
+                   (click)="supprimerProduit(produit.id!)"
+                   [disabled]="idsEnSuppression.has(produit.id!)">
+
+            🗑️ Supprimer
+
+           </button>
+         }
 
         </td>
 
@@ -203,7 +243,7 @@
     <button
         class="btn btn-secondary me-2"
         (click)="pagePrecedente()"
-        [disabled]="pageCourante === 1">
+        [disabled]="pageCourante === 0">
 
         ⬅ Précédent
 
@@ -211,18 +251,72 @@
 
     <span>
 
-        Page {{ pageCourante }}
+        Page {{ pageCourante + 1 }}
         sur
-        {{ nombrePages }}
+        {{ totalPages || 1 }}
 
     </span>
 
     <button class="btn btn-secondary ms-2"
         (click)="pageSuivante()"
-        [disabled]="pageCourante === nombrePages">
+        [disabled]="pageCourante >= totalPages - 1">
 
         Suivant ➡
 
     </button>
 
 </div>
+
+<!-- ========================= -->
+<!-- Panneau de réapprovisionnement (entrée de stock) -->
+<!-- ========================= -->
+@if (produitAReapprovisionner) {
+
+  <div class="reappro-backdrop" (click)="fermerReapprovisionnement()">
+
+    <div class="card shadow border-0 reappro-panel" (click)="$event.stopPropagation()">
+      <div class="card-body p-4">
+
+        <h5 class="card-title fw-bold mb-3">
+          📦 Réapprovisionner : {{ produitAReapprovisionner.nom }}
+        </h5>
+
+        <p class="text-muted small mb-3">
+          Stock actuel : <strong>{{ produitAReapprovisionner.quantite }}</strong>
+        </p>
+
+        <div class="mb-3">
+          <label class="form-label text-muted small fw-bold">Quantité à ajouter</label>
+          <input type="number" class="form-control" [(ngModel)]="quantiteEntree" name="quantiteEntree" min="1" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-muted small fw-bold">Motif (facultatif)</label>
+          <input type="text" class="form-control" [(ngModel)]="motifEntree" name="motifEntree" placeholder="Ex: Réapprovisionnement fournisseur">
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-success px-4" (click)="confirmerReapprovisionnement()">
+            Valider l'entrée de stock
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="fermerReapprovisionnement()">
+            Annuler
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+}
+
+<!-- ========================= -->
+<!-- Modale de scan caméra (code-barres / QR code) -->
+<!-- ========================= -->
+@if (scannerOuvert) {
+  <app-scanner-code-barres
+    (codeScanne)="onCodeScanne($event)"
+    (fermer)="fermerScanner()">
+  </app-scanner-code-barres>
+}

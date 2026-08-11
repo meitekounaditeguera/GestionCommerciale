@@ -1,7 +1,9 @@
 package com.gestioncommerciale.backend.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +23,13 @@ public class CommandeController {
         this.commandeService = commandeService;
     }
 
-    // Récupérer toutes les commandes
+    // Récupérer les commandes de la page demandée
     @GetMapping
-    public List<CommandeDTO> getAllCommandes() {
-        return commandeService.getAllCommandes();
+    public Page<CommandeDTO> getAllCommandes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return commandeService.getAllCommandes(pageable);
     }
 
     // Récupérer une commande par son id
@@ -45,5 +50,11 @@ public class CommandeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCommande(@PathVariable Long id) {
         commandeService.deleteCommande(id);
+    }
+
+    // Annuler une commande : passe son statut à ANNULE et recrédite le stock des produits.
+    @PutMapping("/{id}/annuler")
+    public CommandeDTO annulerCommande(@PathVariable Long id) {
+        return commandeService.annulerCommande(id);
     }
 }

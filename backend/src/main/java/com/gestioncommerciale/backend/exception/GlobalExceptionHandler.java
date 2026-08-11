@@ -34,6 +34,30 @@ public class GlobalExceptionHandler {
                 .body(ex.getMessage());
     }
 
+    // Gère les cas où le fournisseur demandé n'existe pas.
+    @ExceptionHandler(FournisseurNotFoundException.class)
+    public ResponseEntity<String> handleFournisseurNotFound(FournisseurNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    // Gère les cas où la commande fournisseur demandée n'existe pas.
+    @ExceptionHandler(CommandeFournisseurNotFoundException.class)
+    public ResponseEntity<String> handleCommandeFournisseurNotFound(CommandeFournisseurNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    // Gère les transitions de statut invalides sur une commande fournisseur.
+    @ExceptionHandler(StatutCommandeFournisseurInvalideException.class)
+    public ResponseEntity<String> handleStatutCommandeFournisseurInvalide(StatutCommandeFournisseurInvalideException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ex.getMessage());
+    }
+
     // Gère les cas où la commande demandée n'existe pas.
     @ExceptionHandler(CommandeNotFoundException.class)
     public ResponseEntity<String> handleCommandeNotFound(CommandeNotFoundException ex) {
@@ -45,6 +69,14 @@ public class GlobalExceptionHandler {
     // Gère les cas où le stock disponible est insuffisant pour honorer une commande.
     @ExceptionHandler(StockInsuffisantException.class)
     public ResponseEntity<String> handleStockInsuffisant(StockInsuffisantException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ex.getMessage());
+    }
+
+    // Gère les transitions de statut invalides sur une commande de vente (ex: annuler deux fois).
+    @ExceptionHandler(StatutCommandeInvalideException.class)
+    public ResponseEntity<String> handleStatutCommandeInvalide(StatutCommandeInvalideException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ex.getMessage());

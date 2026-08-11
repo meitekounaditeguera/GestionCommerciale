@@ -1,22 +1,22 @@
 package com.gestioncommerciale.backend.mapper;
 
-import com.gestioncommerciale.backend.dto.LigneCommandeDTO;
-import com.gestioncommerciale.backend.model.LigneCommande;
+import com.gestioncommerciale.backend.dto.LigneCommandeFournisseurDTO;
+import com.gestioncommerciale.backend.model.LigneCommandeFournisseur;
 import com.gestioncommerciale.backend.model.Produit;
 
-public class LigneCommandeMapper {
+public class LigneCommandeFournisseurMapper {
 
-    public static LigneCommandeDTO toDTO(LigneCommande ligne) {
+    public static LigneCommandeFournisseurDTO toDTO(LigneCommandeFournisseur ligne) {
 
         if (ligne == null) {
             return null;
         }
 
-        LigneCommandeDTO dto = new LigneCommandeDTO();
+        LigneCommandeFournisseurDTO dto = new LigneCommandeFournisseurDTO();
 
         dto.setId(ligne.getId());
         dto.setQuantite(ligne.getQuantite());
-        dto.setPrixUnitaire(ligne.getPrixUnitaire());
+        dto.setPrixAchatUnitaire(ligne.getPrixAchatUnitaire());
 
         if (ligne.getProduit() != null) {
             dto.setProduitId(ligne.getProduit().getId());
@@ -25,17 +25,17 @@ public class LigneCommandeMapper {
         return dto;
     }
 
-    public static LigneCommande toEntity(LigneCommandeDTO dto) {
+    public static LigneCommandeFournisseur toEntity(LigneCommandeFournisseurDTO dto) {
 
         if (dto == null) {
             return null;
         }
 
-        LigneCommande ligne = new LigneCommande();
+        LigneCommandeFournisseur ligne = new LigneCommandeFournisseur();
 
         ligne.setId(dto.getId());
         ligne.setQuantite(dto.getQuantite());
-        ligne.setPrixUnitaire(dto.getPrixUnitaire());
+        ligne.setPrixAchatUnitaire(dto.getPrixAchatUnitaire());
 
         if (dto.getProduitId() != null) {
             Produit produit = new Produit();

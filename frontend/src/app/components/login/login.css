@@ -1,0 +1,320 @@
+/* Panneau de marque bleu vibrant fixe, panneau formulaire suivant le thème
+   clair/sombre de l'application (attribut data-bs-theme posé sur <html> par
+   ThemeService — voir src/app/services/theme.service.ts). */
+:host {
+  --gc-brand-bg: #1e3a8a;
+  --gc-brand-bg-hover: #24469e;
+  --gc-brand-shadow: rgba(30, 58, 138, 0.35);
+
+  --gc-accent: #2563eb;
+  --gc-accent-ring: rgba(37, 99, 235, 0.1);
+
+  --gc-text: #101b2d;
+  --gc-text-muted: #64748b;
+  --gc-surface: #f5f6f8;
+  --gc-card: #ffffff;
+  --gc-border: #e2e8f0;
+
+  --gc-danger-bg: #fdecec;
+  --gc-danger-fg: #9c2b2b;
+  --gc-danger-border: #f3c6c6;
+
+  display: block;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+:host-context([data-bs-theme="dark"]) {
+  --gc-accent: #5b8def;
+  --gc-accent-ring: rgba(91, 141, 239, 0.18);
+
+  --gc-text: #e7eaf0;
+  --gc-text-muted: #93a1b5;
+  --gc-surface: #0f1622;
+  --gc-card: #141e2e;
+  --gc-border: #263349;
+
+  --gc-danger-bg: #2a1616;
+  --gc-danger-fg: #f0a3a3;
+  --gc-danger-border: #4a2222;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+}
+
+/* Bande de marque : reste bleu vibrant dans les deux thèmes, comme une enseigne fixe. */
+.brand-pane {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: clamp(2.25rem, 6vw, 5rem);
+  background-color: var(--gc-brand-bg);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.04) 0,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 1px,
+    transparent 34px
+  );
+  color: #fff;
+}
+
+.brand-pane__content {
+  max-width: 22rem;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+}
+
+.brand-title {
+  margin: 0 0 0.7rem;
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.brand-tagline {
+  margin: 0;
+  max-width: 26ch;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Modules de l'application présentés comme des badges "pill", plus lisibles
+   et plus cohérents visuellement qu'une simple liste séparée par des points. */
+.brand-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 2.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brand-modules li {
+  padding: 0.4rem 0.95rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Formulaire : suit le thème clair/sombre courant de l'application. */
+.form-pane {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 5vw, 4rem);
+  background: var(--gc-surface);
+}
+
+.form-pane__content {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.form-header h2 {
+  margin: 0 0 0.5rem;
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--gc-text);
+  text-wrap: balance;
+}
+
+.form-header p {
+  margin: 0 0 2.4rem;
+  font-size: 0.95rem;
+  color: var(--gc-text-muted);
+}
+
+.field-group {
+  margin-bottom: 1.5rem;
+}
+
+.field-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gc-text);
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  background: var(--gc-card);
+  border: 1px solid var(--gc-border);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-with-icon:focus-within {
+  border-color: var(--gc-accent);
+  box-shadow: 0 0 0 3px var(--gc-accent-ring);
+}
+
+.input-with-icon > i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  font-size: 1rem;
+  color: var(--gc-text-muted);
+}
+
+.input-with-icon input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0.72rem 0.85rem 0.72rem 0;
+  font-size: 0.95rem;
+  color: var(--gc-text);
+  outline: none;
+}
+
+.toggle-visibility {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--gc-text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.toggle-visibility:hover {
+  color: var(--gc-text);
+}
+
+.form-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-bottom: 1.2rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--gc-danger-bg);
+  color: var(--gc-danger-fg);
+  border: 1px solid var(--gc-danger-border);
+  border-radius: 8px;
+  font-size: 0.87rem;
+  line-height: 1.4;
+}
+
+.form-alert i {
+  margin-top: 0.15rem;
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--gc-brand-bg);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--gc-brand-bg-hover);
+  box-shadow: 0 6px 16px var(--gc-brand-shadow);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.75;
+  cursor: progress;
+}
+
+.submit-btn__loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: gc-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.6s;
+  }
+}
+
+.toggle-visibility:focus-visible,
+.submit-btn:focus-visible {
+  outline: 2px solid var(--gc-accent);
+  outline-offset: 2px;
+}
+
+.form-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.83rem;
+  color: var(--gc-text-muted);
+}
+
+@keyframes gc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 860px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .brand-pane {
+    padding: 2rem 1.75rem;
+  }
+
+  .brand-pane__content {
+    max-width: none;
+  }
+
+  .brand-tagline {
+    max-width: 100%;
+  }
+
+  .form-pane {
+    min-height: 70vh;
+  }
+}

@@ -10,4 +10,6 @@ export interface Client {
 
   telephone: string;
 
+  adresse?: string;
+
 }

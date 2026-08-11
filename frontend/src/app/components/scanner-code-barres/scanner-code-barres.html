@@ -1,0 +1,31 @@
+<div class="scanner-backdrop" (click)="fermerManuel()">
+
+  <div class="card shadow border-0 scanner-panel" (click)="$event.stopPropagation()">
+    <div class="card-body p-4">
+
+      <h5 class="card-title fw-bold mb-3">
+        📷 Scanner un produit
+      </h5>
+
+      @if (erreur) {
+        <div class="alert alert-danger">
+          ⚠️ {{ erreur }}
+        </div>
+      } @else {
+        <p class="text-muted small">
+          Placez le code-barres ou le QR code du produit devant la caméra.
+        </p>
+      }
+
+      <div id="lecteur-code-barres" class="scanner-lecteur"></div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button type="button" class="btn btn-outline-secondary" (click)="fermerManuel()">
+          Fermer
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

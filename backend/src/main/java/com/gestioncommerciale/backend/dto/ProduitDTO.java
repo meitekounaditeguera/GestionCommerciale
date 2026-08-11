@@ -35,4 +35,12 @@ public class ProduitDTO {
     @Min(value = 0, message = "La quantité doit être supérieure ou égale à 0")
     private Integer quantite;
 
+    // Catégorie facultative
+    @Size(max = 100, message = "La catégorie ne doit pas dépasser 100 caractères")
+    private String categorie;
+
+    // Code-barres / QR code facultatif, utilisé pour la recherche par scan caméra.
+    @Size(max = 100, message = "Le code-barres ne doit pas dépasser 100 caractères")
+    private String codeBarre;
+
 }

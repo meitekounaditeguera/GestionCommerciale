@@ -1,1 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Mode sombre : transition douce des couleurs lors du basculement de thème, sur les
+   éléments Bootstrap qui changent de fond/texte (cartes, tableaux, modales, navbar). */
+body,
+.card,
+.navbar,
+.table,
+.modal-content,
+.list-group-item,
+.form-control,
+.input-group-text {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}

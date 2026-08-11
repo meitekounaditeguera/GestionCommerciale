@@ -10,6 +10,9 @@ export interface Commande {
 
   montantTotal?: number;
 
+  // 'VALIDE' ou 'ANNULE', calculé côté serveur.
+  statut?: string;
+
   lignes: LigneCommande[];
 
 }

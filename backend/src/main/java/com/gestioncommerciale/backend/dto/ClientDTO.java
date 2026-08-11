@@ -29,4 +29,7 @@ public class ClientDTO {
     @NotBlank(message = "Le téléphone est obligatoire")
     @Size(min = 10, max = 20, message = "Le téléphone doit contenir entre 10 et 20 caractères")
     private String telephone;
+
+    @Size(max = 255, message = "L'adresse ne doit pas dépasser 255 caractères")
+    private String adresse;
 }

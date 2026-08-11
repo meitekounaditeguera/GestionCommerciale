@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import com.gestioncommerciale.backend.dto.CommandeDTO;
 import com.gestioncommerciale.backend.model.Client;
 import com.gestioncommerciale.backend.model.Commande;
+import com.gestioncommerciale.backend.model.StatutCommande;
 
 public class CommandeMapper {
 
@@ -19,6 +20,12 @@ public class CommandeMapper {
         dto.setId(commande.getId());
         dto.setDateCommande(commande.getDateCommande());
         dto.setMontantTotal(commande.getMontantTotal());
+
+        // Les commandes créées avant l'introduction du statut n'ont pas cette colonne
+        // renseignée en base : on les considère VALIDE par défaut.
+        dto.setStatut(
+            (commande.getStatut() != null ? commande.getStatut() : StatutCommande.VALIDE).name()
+        );
 
         if (commande.getClient() != null) {
             dto.setClientId(commande.getClient().getId());

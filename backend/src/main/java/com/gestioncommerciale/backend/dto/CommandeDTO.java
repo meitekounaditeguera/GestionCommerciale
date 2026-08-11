@@ -24,6 +24,9 @@ public class CommandeDTO {
     // Calculé côté serveur à partir des lignes : jamais fourni par le client.
     private BigDecimal montantTotal;
 
+    // Statut de la commande ("VALIDE" ou "ANNULE"), calculé côté serveur.
+    private String statut;
+
     // Identifiant du client
     @NotNull(message = "Le client est obligatoire")
     private Long clientId;

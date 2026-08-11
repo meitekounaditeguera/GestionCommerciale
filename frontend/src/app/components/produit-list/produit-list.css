@@ -1,0 +1,15 @@
+.reappro-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.reappro-panel {
+  width: 100%;
+  max-width: 420px;
+}

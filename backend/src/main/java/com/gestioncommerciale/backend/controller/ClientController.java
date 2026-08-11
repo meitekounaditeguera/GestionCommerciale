@@ -5,11 +5,13 @@ import com.gestioncommerciale.backend.service.ClientService;
 
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,8 +41,11 @@ public class ClientController {
 
     //@GetMapping : récupérer tous les clients de la base de données.
     @GetMapping
-    public List<ClientDTO> getAllClients(){
-        return clientService.getAllClients();
+    public Page<ClientDTO> getAllClients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        return clientService.getAllClients(pageable);
     }
 
     //@Operation(summary = "Récupérer Un client par son id") : permet de documenter la route dans Swagger.

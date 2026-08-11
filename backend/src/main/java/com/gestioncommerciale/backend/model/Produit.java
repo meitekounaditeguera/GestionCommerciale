@@ -37,6 +37,21 @@ public class Produit {
     @Column(nullable = false)
     private Integer quantite;
 
+    // Catégorie du produit (utilisée pour la ventilation des ventes par catégorie)
+    @Column(length = 100)
+    private String categorie;
+
+    // Code-barres / QR code du produit, utilisé pour la recherche par scan caméra.
+    // Facultatif : tous les produits n'ont pas de code physique.
+    @Column(name = "code_barre", length = 100, unique = true)
+    private String codeBarre;
+
+    // Suppression logique : un produit "supprimé" est désactivé, jamais retiré physiquement
+    // de la base. Les lignes de commande passées restent ainsi consultables (FK produit_id
+    // intacte), et la suppression ne peut plus jamais échouer avec une erreur d'intégrité 409.
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean actif = true;
+
     // ==========================
     // Un produit peut être présent
     // dans plusieurs lignes de commande
@@ -90,6 +105,25 @@ public class Produit {
         this.quantite = quantite;
     }
 
+    public String getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(String categorie) {
+        this.categorie = categorie;
+    }
+
+    public String getCodeBarre() {
+        return codeBarre;
+    }
+
+    public void setCodeBarre(String codeBarre) {
+        // Normalise une chaîne vide en null : la colonne est UNIQUE, et sans cette
+        // normalisation, un deuxième produit sans code-barres violerait la contrainte
+        // (deux "" ne sont pas distincts pour SQL, contrairement à deux NULL).
+        this.codeBarre = (codeBarre == null || codeBarre.isBlank()) ? null : codeBarre;
+    }
+
     public List<LigneCommande> getLignesCommande() {
     return lignesCommande;
     }
@@ -97,5 +131,13 @@ public class Produit {
     public void setLignesCommande(List<LigneCommande> lignesCommande) {
         this.lignesCommande = lignesCommande;
     }
-    
+
+    public boolean isActif() {
+        return actif;
+    }
+
+    public void setActif(boolean actif) {
+        this.actif = actif;
+    }
+
 }

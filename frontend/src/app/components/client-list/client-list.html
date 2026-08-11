@@ -96,6 +96,17 @@
           }
         </div>
 
+        <!-- Adresse (facultative) -->
+        <div class="col-md-12">
+          <label class="form-label small fw-bold text-muted">Adresse</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="nouveauClient.adresse"
+            name="adresse"
+            placeholder="Ex: Abidjan, Cocody">
+        </div>
+
       </div>
 
       <!-- Message d'erreur global si tentative de validation -->
@@ -118,22 +129,27 @@
 <hr>
 
 <!-- Barre de recherche moderne -->
-<div class="row mb-3">
+<div class="row mb-3 align-items-center">
   <div class="col-md-6 col-lg-4">
     <div class="input-group shadow-sm">
       <!-- Icône Loupe -->
-      <span class="input-group-text bg-white border-end-0" id="search-addon">
+      <span class="input-group-text border-end-0" id="search-addon">
         🔍
       </span>
       <!-- Champ de saisie -->
-      <input 
-        type="text" 
-        class="form-control border-start-0 ps-0" 
-        placeholder="Rechercher un client..." 
-        [(ngModel)]="recherche" 
+      <input
+        type="text"
+        class="form-control border-start-0 ps-0"
+        placeholder="Rechercher un client..."
+        [(ngModel)]="recherche"
         (input)="filtrerClients()"
         aria-describedby="search-addon">
     </div>
+  </div>
+  <div class="col-auto ms-auto">
+    <button class="btn btn-success" (click)="exporterClients()">
+      <i class="bi bi-file-earmark-excel-fill"></i> Exporter en Excel
+    </button>
   </div>
 </div>
 
@@ -167,6 +183,8 @@
 
       <th> Téléphone </th>
 
+      <th> Adresse </th>
+
       <th> Action </th>
 
     </tr>
@@ -175,7 +193,7 @@
 
   <tbody>
 
-    @for (client of clientsPagination; track client.id) {
+    @for (client of clientsFiltres; track client.id) {
 
       <tr>
 
@@ -189,8 +207,10 @@
 
         <td>{{ client.telephone }}</td>
 
+        <td>{{ client.adresse || '—' }}</td>
+
         <td>
-          
+
          <!-- Au clic, on charge le client dans le formulaire -->
          <button class="btn btn-warning" (click)="modifierClient(client)">
 
@@ -198,12 +218,16 @@
 
          </button>
 
-         <!-- Au clic, on supprime le client -->
-         <button class="btn btn-danger ms-1" (click)="supprimerClient(client.id!)">
+         <!-- Au clic, on supprime le client (réservé aux administrateurs) -->
+         @if (authService.hasRole('ROLE_ADMIN')) {
+           <button class="btn btn-danger ms-1"
+                   (click)="supprimerClient(client.id!)"
+                   [disabled]="idsEnSuppression.has(client.id!)">
 
-            🗑️ Supprimer
+              🗑️ Supprimer
 
-          </button>
+            </button>
+         }
 
         </td>
 
@@ -220,7 +244,7 @@
 <div class="mt-3">
   <button class="btn btn-secondary me-2"
    (click)="pagePrecedente()"
-   [disabled]="pageActuelle === 1">
+   [disabled]="pageCourante === 0">
 
   ⬅ Précédent
 
@@ -228,15 +252,15 @@
 
   <span>
 
-  Page {{ pageActuelle }}
+  Page {{ pageCourante + 1 }}
   sur
-  {{ nombrePages }}
+  {{ totalPages || 1 }}
 
   </span>
 
   <button class="btn btn-secondary ms-2"
    (click)="pageSuivante()"
-   [disabled]="pageActuelle === nombrePages">
+   [disabled]="pageCourante >= totalPages - 1">
 
   Suivant ➡
 

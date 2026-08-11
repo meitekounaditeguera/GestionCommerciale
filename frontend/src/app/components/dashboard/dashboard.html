@@ -38,7 +38,212 @@
       <div class="card-body">
         <h6 class="card-title text-white-50">Chiffre d'affaires</h6>
         <h2 class="display-6 fw-bold mb-0">{{ chiffreAffaires | number:'1.0-0' }} FCFA</h2>
+        @if (tendanceCA) {
+          <span class="badge bg-white mt-2" [class.text-success]="tendanceCA.hausse" [class.text-danger]="!tendanceCA.hausse">
+            {{ tendanceCA.hausse ? '▲' : '▼' }}
+            {{ tendanceCA.pourcentage >= 0 ? '+' : '' }}{{ tendanceCA.pourcentage | number:'1.1-1' }}%
+            vs mois dernier
+          </span>
+        }
       </div>
     </div>
   </div>
+</div>
+
+<!-- ========================= -->
+<!-- Chiffre d'affaires par période (Phase 6) -->
+<!-- ========================= -->
+<h5 class="fw-bold mb-3">💰 Chiffre d'affaires par période</h5>
+<div class="row g-3 mb-4">
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted small fw-bold"><i class="bi bi-calendar-day"></i> Journalier</h6>
+        <h3 class="fw-bold mb-0">{{ chiffreAffairesResume.journalier | number:'1.0-0' }} FCFA</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted small fw-bold"><i class="bi bi-calendar-week"></i> Hebdomadaire</h6>
+        <h3 class="fw-bold mb-0">{{ chiffreAffairesResume.hebdomadaire | number:'1.0-0' }} FCFA</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted small fw-bold"><i class="bi bi-calendar3"></i> Mensuel</h6>
+        <h3 class="fw-bold mb-0">{{ chiffreAffairesResume.mensuel | number:'1.0-0' }} FCFA</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted small fw-bold"><i class="bi bi-calendar-range"></i> Annuel</h6>
+        <h3 class="fw-bold mb-0">{{ chiffreAffairesResume.annuel | number:'1.0-0' }} FCFA</h3>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- Top KPIs (Phase 6) -->
+<!-- ========================= -->
+<div class="row g-3 mb-4">
+
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted small fw-bold"><i class="bi bi-star-fill text-warning"></i> Meilleur client</h6>
+        @if (meilleurClient) {
+          <p class="fw-bold fs-5 mb-0">{{ meilleurClient.prenom }} {{ meilleurClient.nom }}</p>
+          <p class="text-muted small mb-0">{{ meilleurClient.totalDepense | number:'1.0-0' }} FCFA dépensés</p>
+        } @else {
+          <p class="text-muted mb-0">Aucune donnée disponible.</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted small fw-bold"><i class="bi bi-award-fill text-primary"></i> Produit le plus vendu</h6>
+        @if (produitPhare) {
+          <p class="fw-bold fs-5 mb-0">{{ produitPhare.nom }}</p>
+          <p class="text-muted small mb-0">{{ produitPhare.quantiteVendue }} unités vendues</p>
+        } @else {
+          <p class="text-muted mb-0">Aucune donnée disponible.</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted small fw-bold"><i class="bi bi-tags-fill text-success"></i> Catégorie la plus populaire</h6>
+        @if (categoriePopulaire) {
+          <p class="fw-bold fs-5 mb-0">{{ categoriePopulaire.categorie }}</p>
+          <p class="text-muted small mb-0">{{ categoriePopulaire.quantiteVendue }} articles vendus</p>
+        } @else {
+          <p class="text-muted mb-0">Aucune donnée disponible.</p>
+        }
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- Visuels analytiques (Phase 3) -->
+<!-- ========================= -->
+<div class="dashboard-charts-grid">
+
+  <!-- 📈 Évolution du chiffre d'affaires par mois -->
+  <div class="card border-0 shadow-sm chart-card chart-ca">
+    <div class="card-body">
+      <h6 class="card-title fw-bold mb-3">📈 Évolution du chiffre d'affaires (12 derniers mois)</h6>
+      <div class="chart-container">
+        @if (caMensuelVide) {
+          <p class="text-muted text-center mt-4">Aucune donnée de vente disponible pour le moment.</p>
+        } @else {
+          <canvas baseChart
+            [data]="lineChartData"
+            [options]="lineChartOptions"
+            type="line">
+          </canvas>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- 🥧 Ventes par catégorie -->
+  <div class="card border-0 shadow-sm chart-card chart-side1">
+    <div class="card-body">
+      <h6 class="card-title fw-bold mb-3">🥧 Ventes par catégorie</h6>
+      <div class="chart-container">
+        @if (ventesCategorieVide) {
+          <p class="text-muted text-center mt-4">Aucune vente enregistrée pour le moment.</p>
+        } @else {
+          <canvas baseChart
+            [data]="doughnutChartData"
+            [options]="doughnutChartOptions"
+            type="doughnut">
+          </canvas>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- 📊 Top 10 des produits les plus vendus -->
+  <div class="card border-0 shadow-sm chart-card chart-top">
+    <div class="card-body">
+      <h6 class="card-title fw-bold mb-3">📊 Top 10 des produits les plus vendus</h6>
+      <div class="chart-container">
+        @if (topProduitsVide) {
+          <p class="text-muted text-center mt-4">Aucune vente enregistrée pour le moment.</p>
+        } @else {
+          <canvas baseChart
+            [data]="barChartData"
+            [options]="barChartOptions"
+            type="bar">
+          </canvas>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Widgets secondaires : nouveaux clients + alertes stock -->
+  <div class="chart-side2">
+
+    <!-- 👥 Nouveaux clients -->
+    <div class="card border-0 shadow-sm chart-card mb-3">
+      <div class="card-body text-center">
+        <h6 class="card-title fw-bold mb-2">👥 Nouveaux clients</h6>
+        <span class="badge bg-info-subtle text-info-emphasis fs-3 fw-bold px-3 py-2">
+          {{ nouveauxClients }}
+        </span>
+        <p class="text-muted small mb-0 mt-2">sur les {{ periodeNouveauxClientsJours }} derniers jours</p>
+      </div>
+    </div>
+
+    <!-- 📉 Alerte stock -->
+    <div class="card border-0 shadow-sm chart-card">
+      <div class="card-body">
+        <h6 class="card-title fw-bold mb-3">📉 Alertes de stock</h6>
+        @if (rupturesStock.length === 0) {
+          <p class="text-muted text-center mb-0">✅ Aucun produit en rupture ou stock bas.</p>
+        } @else {
+          <ul class="list-group list-group-flush stock-alert-list">
+            @for (produit of rupturesStock; track produit.id) {
+              <li class="list-group-item px-0">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span [class.text-danger]="estRuptureImminente(produit.quantite)"
+                        [class.text-warning]="!estRuptureImminente(produit.quantite)"
+                        class="fw-bold">{{ produit.nom }}</span>
+                  @if (estRuptureImminente(produit.quantite)) {
+                    <span class="badge bg-danger">Rupture imminente ({{ produit.quantite }})</span>
+                  } @else {
+                    <span class="badge bg-warning text-dark">Stock bas ({{ produit.quantite }})</span>
+                  }
+                </div>
+                <small class="text-muted">⏳ {{ estimationEpuisement(produit.quantite) }}</small>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+  </div>
+
 </div>

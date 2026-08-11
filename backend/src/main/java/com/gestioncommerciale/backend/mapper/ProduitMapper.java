@@ -19,6 +19,8 @@ public class ProduitMapper {
         dto.setDescription(produit.getDescription());
         dto.setPrix(produit.getPrix());
         dto.setQuantite(produit.getQuantite());
+        dto.setCategorie(produit.getCategorie());
+        dto.setCodeBarre(produit.getCodeBarre());
 
         return dto;
     }
@@ -37,6 +39,8 @@ public class ProduitMapper {
         produit.setDescription(dto.getDescription());
         produit.setPrix(dto.getPrix());
         produit.setQuantite(dto.getQuantite());
+        produit.setCategorie(dto.getCategorie());
+        produit.setCodeBarre(dto.getCodeBarre());
 
         return produit;
     }

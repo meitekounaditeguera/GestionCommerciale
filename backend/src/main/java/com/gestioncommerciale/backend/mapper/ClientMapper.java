@@ -20,6 +20,7 @@ public class ClientMapper {
         dto.setPrenom(client.getPrenom());
         dto.setEmail(client.getEmail());
         dto.setTelephone(client.getTelephone());
+        dto.setAdresse(client.getAdresse());
 
         return dto;
     }
@@ -39,6 +40,7 @@ public class ClientMapper {
         client.setPrenom(dto.getPrenom());
         client.setEmail(dto.getEmail());
         client.setTelephone(dto.getTelephone());
+        client.setAdresse(dto.getAdresse());
 
         return client;
     }

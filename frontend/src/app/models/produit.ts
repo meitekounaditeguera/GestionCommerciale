@@ -15,4 +15,10 @@ export interface Produit {
   // Quantité disponible
   quantite: number;
 
+  // Catégorie du produit (utilisée pour la ventilation des ventes par catégorie)
+  categorie?: string;
+
+  // Code-barres / QR code du produit, utilisé pour la recherche par scan caméra.
+  codeBarre?: string;
+
 }

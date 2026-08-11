@@ -38,6 +38,16 @@ public class Commande {
     private Client client;
 
     // ==========================
+    // Statut de la commande (VALIDE par défaut, ANNULE après annulation).
+    // Pas de "nullable = false" : avec ddl-auto=update, une contrainte NOT NULL sur une
+    // colonne ajoutée à une table déjà peuplée ferait échouer la migration. Les commandes
+    // déjà en base (statut = null) sont traitées comme VALIDE par le mapper et le service.
+    // ==========================
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private StatutCommande statut;
+
+    // ==========================
     // Une commande contient plusieurs lignes
     // ==========================
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -83,6 +93,14 @@ public class Commande {
 
     public void setClient(Client client) {
         this.client = client;
+    }
+
+    public StatutCommande getStatut() {
+        return statut;
+    }
+
+    public void setStatut(StatutCommande statut) {
+        this.statut = statut;
     }
 
     public List<LigneCommande> getLignesCommande() {

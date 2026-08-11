@@ -1,0 +1,51 @@
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas:
+    "ca      side1"
+    "top     side2";
+  gap: 1rem;
+}
+
+.chart-ca {
+  grid-area: ca;
+}
+
+.chart-side1 {
+  grid-area: side1;
+}
+
+.chart-top {
+  grid-area: top;
+}
+
+.chart-side2 {
+  grid-area: side2;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card {
+  min-width: 0;
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+.stock-alert-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+@media (max-width: 991px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "ca"
+      "side1"
+      "top"
+      "side2";
+  }
+}
