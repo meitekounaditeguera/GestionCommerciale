@@ -106,7 +106,11 @@ GestionCommerciale/
 
 ### Backend
 
+Les identifiants PostgreSQL ne sont jamais commités : ils sont lus depuis les variables d'environnement `DB_USERNAME` (par défaut `postgres`) et `DB_PASSWORD`.
+
 ```bash
+export DB_PASSWORD="votre-mot-de-passe-postgres"
+
 cd backend
 ./mvnw spring-boot:run
 ```
