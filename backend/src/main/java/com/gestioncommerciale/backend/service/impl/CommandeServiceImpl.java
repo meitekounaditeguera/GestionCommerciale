@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,30 +31,36 @@ import com.gestioncommerciale.backend.repository.CommandeRepository;
 import com.gestioncommerciale.backend.repository.ProduitRepository;
 import com.gestioncommerciale.backend.service.AuditLogService;
 import com.gestioncommerciale.backend.service.CommandeService;
+import com.gestioncommerciale.backend.service.FacturePdfService;
 import com.gestioncommerciale.backend.service.MouvementStockService;
 
 
 @Service
 public class CommandeServiceImpl implements CommandeService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommandeServiceImpl.class);
+
     private final CommandeRepository commandeRepository;
     private final ClientRepository clientRepository;
     private final ProduitRepository produitRepository;
     private final MouvementStockService mouvementStockService;
     private final AuditLogService auditLogService;
+    private final FacturePdfService facturePdfService;
 
     public CommandeServiceImpl(
             CommandeRepository commandeRepository,
             ClientRepository clientRepository,
             ProduitRepository produitRepository,
             MouvementStockService mouvementStockService,
-            AuditLogService auditLogService) {
+            AuditLogService auditLogService,
+            FacturePdfService facturePdfService) {
 
         this.commandeRepository = commandeRepository;
         this.clientRepository = clientRepository;
         this.produitRepository = produitRepository;
         this.mouvementStockService = mouvementStockService;
         this.auditLogService = auditLogService;
+        this.facturePdfService = facturePdfService;
     }
 
     @Override
@@ -166,6 +174,17 @@ public class CommandeServiceImpl implements CommandeService {
             "La commande #" + commandeSauvegardee.getId() + " a été créée pour "
                     + client.getNom() + " " + client.getPrenom()
                     + " - Montant : " + commandeSauvegardee.getMontantTotal() + " FCFA");
+
+    // Archivage de la facture PDF côté serveur. Volontairement isolé dans son propre
+    // try/catch : la commande est déjà persistée et l'échec de génération du PDF (disque
+    // plein, permissions...) ne doit jamais faire échouer la création de la commande, ni
+    // provoquer un rollback de la transaction. On se contente de journaliser.
+    try {
+        facturePdfService.genererEtArchiver(commandeSauvegardee);
+    } catch (Exception ex) {
+        LOGGER.warn("Échec de l'archivage de la facture PDF pour la commande #{} : {}",
+                commandeSauvegardee.getId(), ex.getMessage());
+    }
 
     // Retour du DTO
     return CommandeMapper.toDTO(commandeSauvegardee);

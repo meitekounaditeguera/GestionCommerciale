@@ -29,11 +29,11 @@ export class AuthService {
         const token = response?.token ?? response?.accessToken ?? response?.jwt;
 
         if (token) {
-          localStorage.setItem(this.tokenKey, token);
+          this.ecrireStockage(this.tokenKey, token);
         }
 
         if (response?.role) {
-          localStorage.setItem(this.roleKey, response.role);
+          this.ecrireStockage(this.roleKey, response.role);
         }
       })
     );
@@ -41,18 +41,18 @@ export class AuthService {
 
   // Supprime le token et le rôle stockés côté navigateur.
   logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.roleKey);
+    this.supprimerStockage(this.tokenKey);
+    this.supprimerStockage(this.roleKey);
   }
 
   // Retourne le token enregistré si un utilisateur est connecté.
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    return this.lireStockage(this.tokenKey);
   }
 
   // Retourne le rôle de l'utilisateur connecté (ex: "ROLE_ADMIN").
   getRole(): string | null {
-    return localStorage.getItem(this.roleKey);
+    return this.lireStockage(this.roleKey);
   }
 
   // Indique si l'utilisateur connecté possède exactement ce rôle.
@@ -69,5 +69,24 @@ export class AuthService {
   // Indique si un utilisateur possède déjà un token de session.
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  // localStorage n'est pas disponible dans l'environnement des tests unitaires (ni en rendu
+  // côté serveur) : ces trois méthodes centralisent la vérification pour que le service reste
+  // utilisable (sans session) plutôt que de lever une erreur.
+  private lireStockage(cle: string): string | null {
+    return typeof localStorage === 'undefined' ? null : localStorage.getItem(cle);
+  }
+
+  private ecrireStockage(cle: string, valeur: string): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(cle, valeur);
+    }
+  }
+
+  private supprimerStockage(cle: string): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(cle);
+    }
   }
 }

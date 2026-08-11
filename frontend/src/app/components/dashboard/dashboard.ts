@@ -269,17 +269,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return quantite < 5;
   }
 
-  // Estimation grossière du délai avant rupture totale, à partir du seuil de quantité :
-  // une règle simple pour donner un ordre de grandeur au gestionnaire, pas une prévision
-  // fondée sur la vitesse de vente réelle du produit.
-  estimationEpuisement(quantite: number): string {
-    if (quantite === 0) {
-      return 'Stock déjà épuisé';
+  // Formate l'estimation du délai avant rupture calculée côté backend à partir de la vélocité
+  // de vente réelle du produit sur les 14 derniers jours (DashboardServiceImpl.
+  // calculerJoursAvantRupture). null = vélocité nulle sur la période (aucune vente récente) :
+  // affiché explicitement comme une estimation indéterminée plutôt qu'un "0 jour" trompeur.
+  estimationEpuisement(joursAvantRupture: number | null): string {
+    if (joursAvantRupture === null) {
+      return 'Vélocité de vente insuffisante pour estimer';
     }
-    if (quantite < 5) {
-      return 'Épuisement estimé : ~3 jours';
+    if (joursAvantRupture <= 1) {
+      return 'Épuisement estimé : ~1 jour';
     }
-    return 'Épuisement estimé : ~1 semaine';
+    return `Épuisement estimé : ~${joursAvantRupture} jours`;
   }
 
   // Compare le CA du mois en cours à celui du mois précédent (les deux derniers points

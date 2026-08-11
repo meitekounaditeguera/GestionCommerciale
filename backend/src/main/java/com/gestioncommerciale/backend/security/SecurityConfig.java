@@ -54,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/commandes-fournisseurs/**").hasAnyRole("ADMIN", "GESTIONNAIRE")
                         // Le journal d'audit trace les actions de tous les utilisateurs : réservé aux administrateurs.
                         .requestMatchers("/api/audit-logs/**").hasRole("ADMIN")
+                        // Déclenchement manuel de l'alerte stock : réservé aux administrateurs, comme le cron.
+                        .requestMatchers("/api/notifications/**").hasRole("ADMIN")
                         // Le reste de l'API (lecture, création) est accessible à tout utilisateur authentifié.
                         .anyRequest().authenticated())
                 // On ne garde pas de session pour cette API, car on utilise des JWT.

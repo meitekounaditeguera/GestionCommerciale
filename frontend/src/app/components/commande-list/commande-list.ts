@@ -193,6 +193,13 @@ chargerProduits(): void {
 
 ajouterLigne(): void {
 
+  // Une ligne sans produit sélectionné (produitId 0, valeur de l'option par défaut) ou avec
+  // une quantité nulle/négative n'a pas de sens métier. L'attribut HTML min="1" du champ ne
+  // suffit pas à l'empêcher (contournable), donc on revérifie ici avant d'ajouter la ligne.
+  if (!this.nouvelleLigne.produitId || this.nouvelleLigne.quantite <= 0) {
+    return;
+  }
+
   this.nouvelleCommande.lignes.push({
 
     produitId: this.nouvelleLigne.produitId,

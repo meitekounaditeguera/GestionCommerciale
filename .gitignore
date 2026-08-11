@@ -4,6 +4,9 @@
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
+# Factures PDF archivées côté serveur (générées à l'exécution, cf. facture.stockage.dossier)
+backend/factures/
+
 # IDE
 .vscode/
 .idea/

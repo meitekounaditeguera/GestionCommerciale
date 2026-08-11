@@ -26,6 +26,11 @@ export interface ProduitRupture {
   id: number;
   nom: string;
   quantite: number;
+
+  // Estimation du nombre de jours avant épuisement, fondée sur la vélocité de vente réelle
+  // du produit sur les 14 derniers jours (calculée côté backend). null = indéterminé (aucune
+  // vente récente pour ce produit) : à afficher explicitement comme tel, pas comme "0 jour".
+  joursAvantRupture: number | null;
 }
 
 export interface NouveauxClients {

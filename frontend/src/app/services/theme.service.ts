@@ -34,14 +34,22 @@ export class ThemeService {
   private definirTheme(theme: Theme): void {
     this.themeSubject.next(theme);
     this.appliquerTheme(theme);
-    localStorage.setItem(CLE_STOCKAGE, theme);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CLE_STOCKAGE, theme);
+    }
   }
 
   private appliquerTheme(theme: Theme): void {
     document.documentElement.setAttribute('data-bs-theme', theme);
   }
 
+  // typeof localStorage !== 'undefined' : localStorage n'est pas disponible dans
+  // l'environnement des tests unitaires (ni en rendu côté serveur) ; on retombe alors
+  // simplement sur le thème par défaut plutôt que de faire planter le service.
   private lireThemeInitial(): Theme {
+    if (typeof localStorage === 'undefined') {
+      return 'light';
+    }
     return localStorage.getItem(CLE_STOCKAGE) === 'dark' ? 'dark' : 'light';
   }
 }

@@ -3,6 +3,8 @@ package com.gestioncommerciale.backend.exception;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 //@RestControllerAdvice : indique que cette classe gère les exceptions pour tous les contrôleurs REST de l'application.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     //@ExceptionHandler(ClientNotFoundException.class) : indique que cette méthode gère les exceptions de type ClientNotFoundException.
     @ExceptionHandler(ClientNotFoundException.class)
@@ -61,6 +65,14 @@ public class GlobalExceptionHandler {
     // Gère les cas où la commande demandée n'existe pas.
     @ExceptionHandler(CommandeNotFoundException.class)
     public ResponseEntity<String> handleCommandeNotFound(CommandeNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
+    // Gère les cas où aucune facture PDF n'a été archivée pour la commande demandée.
+    @ExceptionHandler(FactureNotFoundException.class)
+    public ResponseEntity<String> handleFactureNotFound(FactureNotFoundException ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ex.getMessage());
@@ -114,9 +126,11 @@ public class GlobalExceptionHandler {
                 .body("Impossible d'effectuer cette opération : la ressource est utilisée ailleurs dans l'application.");
     }
 
-    // Filet de sécurité pour toute exception imprévue : évite d'exposer la pile d'appels au client.
+    // Filet de sécurité pour toute exception imprévue : évite d'exposer la pile d'appels au client,
+    // mais on la journalise côté serveur pour pouvoir diagnostiquer (sinon l'erreur disparaît sans trace).
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleUnexpectedError(Exception ex) {
+        LOGGER.error("Erreur inattendue", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Une erreur inattendue est survenue.");

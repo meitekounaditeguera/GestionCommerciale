@@ -236,7 +236,7 @@
                     <span class="badge bg-warning text-dark">Stock bas ({{ produit.quantite }})</span>
                   }
                 </div>
-                <small class="text-muted">⏳ {{ estimationEpuisement(produit.quantite) }}</small>
+                <small class="text-muted">⏳ {{ estimationEpuisement(produit.joursAvantRupture) }}</small>
               </li>
             }
           </ul>
