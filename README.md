@@ -55,7 +55,7 @@ L'application couvre l'ensemble du cycle d'une activité commerciale : clients, 
 |---|---|
 | **Connexion** | ![Connexion](screenshots/Capture%20d'%C3%A9cran%202026-08-11%20080716.png) |
 | **Tableau de bord** | ![Tableau de bord](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20165647.png) |
-| **Graphiques & alertes de stock** | ![Graphiques et alertes de stock](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20170919.png) |
+| **Graphiques & alertes de stock** | ![Graphiques et alertes de stock](screenshots/Capture%20d'%C3%A9cran%202026-08-11%20173853.png) |
 | **Catalogue produits (scan & export)** | ![Catalogue produits](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20172024.png) |
 | **Prise de commande (scanner intégré)** | ![Prise de commande](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20172555.png) |
 | **Commandes & facturation PDF** | ![Commandes et facturation](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20175658.png) |
