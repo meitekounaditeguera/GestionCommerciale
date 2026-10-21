@@ -52,7 +52,7 @@ L'application couvre l'ensemble du cycle d'une activité commerciale :
 | **Export tabulaire** | ExcelJS |
 | **Notifications** | Spring Mail (SMTP) + job planifié (`@Scheduled`) |
 | **Tests** | JUnit 5 / Mockito / AssertJ, Spring MockMvc et Spring Security Test sur base H2 en mémoire (backend), Vitest via le builder natif `@angular/build:unit-test` (frontend) |
-| **Intégration continue** | GitHub Actions (compilation, tests, packaging) |
+| **Intégration continue** | GitHub Actions : `ci-backend.yml` (compilation, tests sur H2, packaging) et `ci-frontend.yml` (Node 22, tests Vitest, build Angular) |
 
 ---
 
@@ -295,6 +295,8 @@ classDiagram
 L'application n'utilise aucune session côté serveur (`SessionCreationPolicy.STATELESS`). Chaque requête protégée doit porter un token JWT dans l'en-tête `Authorization: Bearer <token>`, vérifié par un filtre dédié (`JwtAuthenticationFilter`) exécuté avant le filtre d'authentification standard de Spring Security.
 
 La clé de signature des tokens est lue depuis la variable d'environnement `JWT_SECRET` (propriété `jwt.secret`). Le code ne contient aucune clé de secours : si la clé est absente ou fait moins de 32 caractères, `JwtService` lève une `IllegalStateException` et l'application refuse de démarrer. En local, le profil `dev`, actif par défaut (`spring.profiles.default=dev`), fournit une clé de développement dans `application-dev.properties`. Les comptes de démonstration (`admin`, `gestionnaire`, `caissier`) ne sont créés par `UtilisateurSeeder` qu'en profil `dev` (`@Profile("dev")`). En production (`SPRING_PROFILES_ACTIVE=prod`), aucun compte n'est créé automatiquement.
+
+Swagger UI (`/swagger-ui/index.html`) prend en charge ce token : `OpenApiConfig` déclare un schéma de sécurité `bearerAuth` (HTTP, bearer, JWT) appliqué à toute l'API. Le bouton « Authorize » permet de coller le token renvoyé par `/auth/login`, qui est ensuite envoyé dans l'en-tête `Authorization` de chaque requête de test. `POST /auth/login` en est exempté (`@SecurityRequirements` vide), puisqu'il sert à obtenir ce token. Les règles d'accès réelles restent celles de `SecurityConfig` (§4.2).
 
 ### 4.2 Rôles applicatifs
 
@@ -869,7 +871,7 @@ Contenu du dossier `factures/` sur le serveur après deux ventes successives : l
 
 ![Email d'alerte stock reçu](../screenshots/Capture%20d'%C3%A9cran%202026-10-21%20131924.png)
 
-Email réellement reçu, déclenché par le job planifié quotidien (voir §5.7). Il applique les seuils partagés `StockSeuils` et contient deux listes : « Produits en rupture imminente (moins de 5 unités) », avec « Telephone iphone 14 Pro (quantité restante : 3) », et « Produits en stock bas (de 5 à 9 unités) », avec « Chargeur Dell (quantité restante : 8) ». Lors du test, l'email est arrivé dans le dossier spam du destinataire : c'est une limite connue de l'envoi SMTP simple, sans authentification du domaine expéditeur (voir §9 pour les pistes d'amélioration de la délivrabilité). Il a été signalé comme « non spam » avant la capture, ce qui explique qu'il apparaisse ici dans la boîte de réception.
+Email réellement reçu. Pour la capture, il a été déclenché manuellement par `POST /api/notifications/test-alerte-stock` (réservé au rôle `ADMIN`), et non par le job planifié quotidien : le contenu est le même que celui envoyé chaque matin (voir §5.7). Il applique les seuils partagés `StockSeuils` et contient deux listes : « Produits en rupture imminente (moins de 5 unités) », avec « Telephone iphone 14 Pro (quantité restante : 3) », et « Produits en stock bas (de 5 à 9 unités) », avec « Chargeur Dell (quantité restante : 8) ». Lors du test, l'email est arrivé dans le dossier spam du destinataire : c'est une limite connue de l'envoi SMTP simple, sans authentification du domaine expéditeur (voir §9 pour les pistes d'amélioration de la délivrabilité). Il a été signalé comme « non spam » avant la capture, ce qui explique qu'il apparaisse ici dans la boîte de réception.
 
 ### 7.11 Couverture de tests automatisés
 
@@ -888,8 +890,11 @@ Deux suites de tests automatisés accompagnent le code applicatif, l'une par cou
 | `DashboardServiceImplTest` | 5 | Calcul de vélocité de vente et estimation du délai avant rupture, y compris le cas « aucune vente récente » |
 | `NotificationServiceImplTest` | 2 | Aucun email envoyé si la liste de ruptures est vide ; séparation de l'email entre « rupture imminente » (moins de 5) et « stock bas » (5 à 9) |
 | `SecurityAutorisationsTest` | 15 | Matrice des droits de §4.2, rôle par rôle (`@WithMockUser`), sur la base H2 de test : refus 403 des actions interdites, accès aux actions permises, refus sans authentification, seeder inactif en test |
+| `OpenApiConfigTest` | 1 | Documentation OpenAPI (`/v3/api-docs`) accessible sans token, schéma `bearerAuth` (HTTP, bearer, JWT) appliqué à l'API, `POST /auth/login` exempté (voir §4.1) |
 
-À l'exécution (`mvn test`), la suite backend passe : 34 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
+À l'exécution (`mvn test`), la suite backend passe : 35 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
+
+Les deux suites sont rejouées par GitHub Actions à chaque push et pull request vers `main` : `ci-backend.yml` lance `./mvnw test` sur la base H2 en mémoire, puis le packaging ; `ci-frontend.yml` installe les dépendances (`npm ci`) sous Node 22, lance les tests Vitest, puis le build de production Angular.
 
 ---
 

@@ -178,7 +178,7 @@ Le dépôt contient deux workflows GitHub Actions, exécutés à chaque push et 
 [.github/workflows/ci-backend.yml](.github/workflows/ci-backend.yml) vérifie automatiquement :
 
 - la compilation du backend
-- l'exécution des tests
+- l'exécution des tests, sur la base H2 en mémoire de `src/test/resources/application.properties` (aucun serveur PostgreSQL n'est nécessaire)
 - le packaging de l'application
 
 [.github/workflows/ci-frontend.yml](.github/workflows/ci-frontend.yml) vérifie automatiquement, sous Node 22 :
