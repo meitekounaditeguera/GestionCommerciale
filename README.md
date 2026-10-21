@@ -189,7 +189,7 @@ Le dépôt contient deux workflows GitHub Actions, exécutés à chaque push et 
 
 ## Outils et assistance
 
-ChatGPT a été consulté pendant le développement.
+ChatGPT et Gemini ont été consultés pendant le développement.
 Claude Code a écrit, à partir d'instructions de l'auteur, l'alerte email, l'archivage PDF, l'estimation de rupture, les droits par rôle, les tests et la documentation technique.
 L'auteur a défini les besoins, relu et validé chaque modification.
 
