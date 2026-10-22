@@ -60,7 +60,7 @@ L'application couvre l'ensemble du cycle d'une activité commerciale : clients, 
 | **Prise de commande (scanner intégré)** | ![Prise de commande](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20172555.png) |
 | **Commandes & facturation PDF** | ![Commandes et facturation](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20175658.png) |
 | **Achats fournisseurs (flux de validation)** | ![Achats fournisseurs](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20180846.png) |
-| **Journal d'audit** | ![Journal d'audit](screenshots/Capture%20d'%C3%A9cran%202026-08-08%20202710.png) |
+| **Journal d'audit** | ![Journal d'audit](screenshots/Capture%20d'%C3%A9cran%202026-10-22%20153942.png) |
 
 D'autres captures sont disponibles dans le dossier [screenshots](screenshots/).
 
@@ -161,6 +161,7 @@ Sans `JWT_SECRET`, ou avec une clé de moins de 32 caractères, l'application re
 | `MAIL_HOST` / `MAIL_PORT` | pour l'alerte stock | Serveur SMTP (par défaut `localhost` / `587`) |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | pour l'alerte stock | Identifiants SMTP |
 | `ALERTE_STOCK_DESTINATAIRE` | pour l'alerte stock | Adresse qui reçoit l'alerte quotidienne |
+| `ALERTE_STOCK_EXPEDITEUR` | non | Adresse « From » de l'alerte. Vide par défaut : le serveur SMTP utilise le compte authentifié (`MAIL_USERNAME`) |
 | `ALERTE_STOCK_CRON` | non | Planification de l'alerte (par défaut `0 0 8 * * *`, tous les jours à 8h) |
 | `FACTURE_STOCKAGE_DOSSIER` | non | Dossier d'archivage des factures PDF (par défaut `./factures`) |
 

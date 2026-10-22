@@ -328,6 +328,8 @@ Un utilisateur connecté avec un rôle insuffisant qui tente d'accéder directem
 
 Chaque création, modification ou suppression sur les entités métier (`Client`, `Produit`, `Fournisseur`, `Commande`) déclenche l'enregistrement d'une ligne dans le journal d'audit (`AuditLogService.enregistrer(...)`), avec l'utilisateur à l'origine de l'action, l'entité concernée, un horodatage et une description lisible de l'action effectuée. Pour les commandes fournisseur, la création, la validation, l'annulation et la réception sont également journalisées.
 
+Les montants écrits dans le journal (et dans la facture PDF archivée côté serveur, §5.8) passent par `MontantFcfa.formater(...)` : « 400 000 FCFA », sans décimales et milliers séparés par une espace, comme la facture générée côté client. Les ventes et les achats ont ainsi le même format, alors qu'auparavant une vente s'affichait « 400000.00 FCFA » (prix relus en base avec deux décimales) et un achat « 1500000 FCFA ». Les lignes déjà enregistrées avant ce changement gardent leur ancien format.
+
 ### 4.4 Validation des données
 
 Le serveur est l'autorité : ses règles de validation sont au moins aussi strictes que celles des formulaires Angular. Ainsi, une requête envoyée directement à l'API, sans passer par l'interface, ne peut pas enregistrer une donnée que le formulaire aurait refusée.
@@ -591,6 +593,8 @@ sequenceDiagram
 
 Un déclenchement manuel est également possible via `POST /api/notifications/test-alerte-stock` (réservé au rôle `ADMIN`), pour vérifier le comportement sans attendre l'horaire planifié.
 
+Le destinataire est fixé par `ALERTE_STOCK_DESTINATAIRE` (propriété `alerte.stock.destinataire`). L'expéditeur est optionnel : `ALERTE_STOCK_EXPEDITEUR` (propriété `alerte.stock.expediteur`), vide par défaut. Lorsqu'il est défini, `NotificationServiceImpl` le place dans l'en-tête « From » du message (`setFrom`) ; lorsqu'il est vide, aucun expéditeur n'est fixé et le serveur SMTP applique le compte authentifié (`MAIL_USERNAME`), ce qui était le comportement d'origine.
+
 ### 5.8 Archivage de la facture PDF côté serveur
 
 ```mermaid
@@ -845,9 +849,9 @@ Ces actions suivent les règles de transition de statut appliquées côté serve
 
 **Journal d'audit**
 
-![Journal d'audit](../screenshots/Capture%20d'%C3%A9cran%202026-08-08%20202710.png)
+![Journal d'audit](../screenshots/Capture%20d'%C3%A9cran%202026-10-22%20153942.png)
 
-Vue paginée de toutes les actions de création, modification et suppression tracées par l'application (69 actions enregistrées sur cette capture), avec la date, l'utilisateur, le type d'action (code couleur : vert pour création, jaune pour modification, rouge pour suppression), l'entité concernée et une description lisible de l'action. Cet écran est réservé au rôle `ADMIN` (voir §4.2).
+Vue paginée de toutes les actions de création, modification et suppression tracées par l'application (76 actions enregistrées sur cette capture), avec la date, l'utilisateur, le type d'action (code couleur : vert pour création, jaune pour modification, rouge pour suppression), l'entité concernée et une description lisible de l'action. Cet écran est réservé au rôle `ADMIN` (voir §4.2).
 
 ### 7.10 Vérifications techniques — sécurité, archivage et notifications
 
@@ -888,11 +892,12 @@ Deux suites de tests automatisés accompagnent le code applicatif, l'une par cou
 |---|---|---|
 | `JwtServiceTest` | 4 | Génération et validation d'un token ; refus de démarrer sans clé JWT ou avec une clé de moins de 32 caractères ; acceptation d'une clé de 32 caractères |
 | `DashboardServiceImplTest` | 5 | Calcul de vélocité de vente et estimation du délai avant rupture, y compris le cas « aucune vente récente » |
-| `NotificationServiceImplTest` | 2 | Aucun email envoyé si la liste de ruptures est vide ; séparation de l'email entre « rupture imminente » (moins de 5) et « stock bas » (5 à 9) |
+| `NotificationServiceImplTest` | 4 | Aucun email envoyé si la liste de ruptures est vide ; séparation de l'email entre « rupture imminente » (moins de 5) et « stock bas » (5 à 9) ; expéditeur renseigné quand `alerte.stock.expediteur` est défini, absent quand elle est vide |
+| `MontantFcfaTest` | 2 | Même format pour une vente (« 400000.00 ») et un achat (« 1500000 ») : « 400 000 FCFA », « 1 500 000 FCFA » ; arrondi, zéro et montant négatif |
 | `SecurityAutorisationsTest` | 15 | Matrice des droits de §4.2, rôle par rôle (`@WithMockUser`), sur la base H2 de test : refus 403 des actions interdites, accès aux actions permises, refus sans authentification, seeder inactif en test |
 | `OpenApiConfigTest` | 1 | Documentation OpenAPI (`/v3/api-docs`) accessible sans token, schéma `bearerAuth` (HTTP, bearer, JWT) appliqué à l'API, `POST /auth/login` exempté (voir §4.1) |
 
-À l'exécution (`mvn test`), la suite backend passe : 35 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
+À l'exécution (`mvn test`), la suite backend passe : 39 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
 
 Les deux suites sont rejouées par GitHub Actions à chaque push et pull request vers `main` : `ci-backend.yml` lance `./mvnw test` sur la base H2 en mémoire, puis le packaging ; `ci-frontend.yml` installe les dépendances (`npm ci`) sous Node 22, lance les tests Vitest, puis le build de production Angular.
 
