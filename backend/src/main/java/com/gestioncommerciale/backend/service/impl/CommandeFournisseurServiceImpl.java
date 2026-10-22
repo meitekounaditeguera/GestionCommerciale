@@ -28,6 +28,7 @@ import com.gestioncommerciale.backend.repository.FournisseurRepository;
 import com.gestioncommerciale.backend.repository.ProduitRepository;
 import com.gestioncommerciale.backend.service.AuditLogService;
 import com.gestioncommerciale.backend.service.CommandeFournisseurService;
+import com.gestioncommerciale.backend.service.MontantFcfa;
 import com.gestioncommerciale.backend.service.MouvementStockService;
 
 @Service
@@ -109,7 +110,7 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
 
         auditLogService.enregistrer(TypeAction.CREATION, "CommandeFournisseur",
                 "La commande fournisseur " + commandeSauvegardee.getReference() + " a été créée pour "
-                        + fournisseur.getNom() + " - Montant : " + commandeSauvegardee.getMontantTotal() + " FCFA");
+                        + fournisseur.getNom() + " - Montant : " + MontantFcfa.formater(commandeSauvegardee.getMontantTotal()));
 
         return CommandeFournisseurMapper.toDTO(commandeSauvegardee);
     }

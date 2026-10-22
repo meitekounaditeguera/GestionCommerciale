@@ -19,6 +19,7 @@ import com.gestioncommerciale.backend.model.Client;
 import com.gestioncommerciale.backend.model.Commande;
 import com.gestioncommerciale.backend.model.LigneCommande;
 import com.gestioncommerciale.backend.service.FacturePdfService;
+import com.gestioncommerciale.backend.service.MontantFcfa;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Font;
@@ -113,13 +114,13 @@ public class FacturePdfServiceImpl implements FacturePdfService {
 
             tableau.addCell(new Phrase(ligne.getProduit().getNom(), policeNormale));
             tableau.addCell(new Phrase(String.valueOf(ligne.getQuantite()), policeNormale));
-            tableau.addCell(new Phrase(ligne.getPrixUnitaire() + " FCFA", policeNormale));
-            tableau.addCell(new Phrase(sousTotal + " FCFA", policeNormale));
+            tableau.addCell(new Phrase(MontantFcfa.formater(ligne.getPrixUnitaire()), policeNormale));
+            tableau.addCell(new Phrase(MontantFcfa.formater(sousTotal), policeNormale));
         }
 
         document.add(tableau);
         document.add(new Paragraph(" "));
-        document.add(new Paragraph("Montant total : " + commande.getMontantTotal() + " FCFA", policeEntete));
+        document.add(new Paragraph("Montant total : " + MontantFcfa.formater(commande.getMontantTotal()), policeEntete));
 
         document.close();
         return sortie.toByteArray();

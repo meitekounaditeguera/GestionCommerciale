@@ -34,7 +34,7 @@ class NotificationServiceImplTest {
         when(dashboardService.getRupturesStock()).thenReturn(Collections.emptyList());
 
         NotificationServiceImpl notificationService =
-                new NotificationServiceImpl(dashboardService, mailSender, "alertes@gestion-commerciale.local");
+                new NotificationServiceImpl(dashboardService, mailSender, "alertes@gestion-commerciale.local", "");
 
         notificationService.envoyerAlerteStock();
 
@@ -50,7 +50,7 @@ class NotificationServiceImplTest {
                 new ProduitRuptureDTO(4L, "Produit D", 9, 12)));
 
         NotificationServiceImpl notificationService =
-                new NotificationServiceImpl(dashboardService, mailSender, "alertes@gestion-commerciale.local");
+                new NotificationServiceImpl(dashboardService, mailSender, "alertes@gestion-commerciale.local", "");
 
         notificationService.envoyerAlerteStock();
 
@@ -64,5 +64,36 @@ class NotificationServiceImplTest {
         assertThat(corps.indexOf("Produit B")).isLessThan(debutStockBas);
         assertThat(corps.indexOf("Produit C")).isGreaterThan(debutStockBas);
         assertThat(corps.indexOf("Produit D")).isGreaterThan(debutStockBas);
+    }
+
+    @Test
+    void doitRenseignerLExpediteurQuandLaProprieteEstDefinie() {
+        when(dashboardService.getRupturesStock()).thenReturn(List.of(
+                new ProduitRuptureDTO(1L, "Produit A", 3, 2)));
+
+        NotificationServiceImpl notificationService = new NotificationServiceImpl(dashboardService, mailSender,
+                "alertes@gestion-commerciale.local", "stock@gestion-commerciale.local");
+
+        notificationService.envoyerAlerteStock();
+
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+        assertThat(captor.getValue().getFrom()).isEqualTo("stock@gestion-commerciale.local");
+    }
+
+    @Test
+    void neDoitPasRenseignerDExpediteurQuandLaProprieteEstVide() {
+        when(dashboardService.getRupturesStock()).thenReturn(List.of(
+                new ProduitRuptureDTO(1L, "Produit A", 3, 2)));
+
+        NotificationServiceImpl notificationService =
+                new NotificationServiceImpl(dashboardService, mailSender, "alertes@gestion-commerciale.local", "");
+
+        notificationService.envoyerAlerteStock();
+
+        // Comportement d'origine : pas de "From", le serveur SMTP applique le compte authentifié.
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+        assertThat(captor.getValue().getFrom()).isNull();
     }
 }

@@ -32,6 +32,7 @@ import com.gestioncommerciale.backend.repository.ProduitRepository;
 import com.gestioncommerciale.backend.service.AuditLogService;
 import com.gestioncommerciale.backend.service.CommandeService;
 import com.gestioncommerciale.backend.service.FacturePdfService;
+import com.gestioncommerciale.backend.service.MontantFcfa;
 import com.gestioncommerciale.backend.service.MouvementStockService;
 
 
@@ -173,7 +174,7 @@ public class CommandeServiceImpl implements CommandeService {
     auditLogService.enregistrer(TypeAction.CREATION, "Commande",
             "La commande #" + commandeSauvegardee.getId() + " a été créée pour "
                     + client.getNom() + " " + client.getPrenom()
-                    + " - Montant : " + commandeSauvegardee.getMontantTotal() + " FCFA");
+                    + " - Montant : " + MontantFcfa.formater(commandeSauvegardee.getMontantTotal()));
 
     // Archivage de la facture PDF côté serveur. Volontairement isolé dans son propre
     // try/catch : la commande est déjà persistée et l'échec de génération du PDF (disque

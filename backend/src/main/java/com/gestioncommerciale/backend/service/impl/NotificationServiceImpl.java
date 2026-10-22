@@ -25,12 +25,18 @@ public class NotificationServiceImpl implements NotificationService {
     private final JavaMailSender mailSender;
     private final String destinataire;
 
+    // Adresse "From" optionnelle. Vide : aucun setFrom(), le serveur SMTP utilise le compte
+    // authentifié (spring.mail.username), comme avant l'ajout de cette propriété.
+    private final String expediteur;
+
     public NotificationServiceImpl(DashboardService dashboardService,
             JavaMailSender mailSender,
-            @Value("${alerte.stock.destinataire}") String destinataire) {
+            @Value("${alerte.stock.destinataire}") String destinataire,
+            @Value("${alerte.stock.expediteur:}") String expediteur) {
         this.dashboardService = dashboardService;
         this.mailSender = mailSender;
         this.destinataire = destinataire;
+        this.expediteur = expediteur;
     }
 
     @Override
@@ -51,6 +57,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .collect(Collectors.toList());
 
         SimpleMailMessage message = new SimpleMailMessage();
+        if (expediteur != null && !expediteur.isBlank()) {
+            message.setFrom(expediteur);
+        }
         message.setTo(destinataire);
         message.setSubject("[Gestion Commerciale] Alerte stock - " + ruptures.size() + " produit(s) à surveiller");
         message.setText(construireCorpsMessage(ruptureImminente, stockBas));
