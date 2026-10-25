@@ -284,6 +284,7 @@ classDiagram
 - **Prix figé à la ligne de commande** : `LigneCommande.prixUnitaire` et `LigneCommandeFournisseur.prixAchatUnitaire` copient le prix au moment de la transaction plutôt que de le lire dynamiquement depuis `Produit`. Ainsi, une modification ultérieure du prix catalogue n'altère jamais le montant d'une commande déjà passée.
 - **Cascade sur les lignes** : `Commande` et `CommandeFournisseur` déclarent `cascade = CascadeType.ALL, orphanRemoval = true` sur leurs lignes : la persistance, la mise à jour et la suppression des lignes suivent automatiquement celles de la commande parente.
 - **Référence lisible pour les commandes fournisseurs** : chaque `CommandeFournisseur` reçoit une référence générée côté serveur au format `CF-<année>-<séquence>` (ex. `CF-2026-0007`), plus lisible qu'un identifiant technique pour un usage métier (bons de commande, échanges avec le fournisseur).
+- **Commandes annulées exclues des indicateurs de vente** : une commande annulée reste en base (statut `ANNULE`) mais n'entre plus dans aucun indicateur de vente du tableau de bord : nombre de commandes, chiffre d'affaires (global, par période, sur 12 mois), meilleur client, top produits, ventes et quantités par catégorie. Les requêtes filtrent sur `statut IS NULL OR statut <> 'ANNULE'` : une commande antérieure à l'introduction du statut (colonne vide) reste comptée comme `VALIDE`, ce qu'un simple `statut <> 'ANNULE'` n'aurait pas fait (une comparaison avec `NULL` n'est jamais vraie en SQL).
 - **Journal d'audit en écriture seule** : une fois créée, aucune opération de l'application ne modifie ni ne supprime une ligne `AuditLog` : le service n'expose que l'écriture d'une nouvelle ligne et la lecture du journal, afin de garantir l'intégrité de la trace. Cette protection est applicative : elle ne repose pas sur une contrainte de la base de données.
 
 ---
@@ -455,6 +456,8 @@ sequenceDiagram
     end
 ```
 
+Une fois annulée, la commande disparaît des indicateurs de vente du tableau de bord (§3.2), et sa sortie de stock n'est plus comptée dans la vélocité de vente (§5.5). Le motif `"Annulation - Commande #id"` est aussi celui posé lors d'une suppression de commande : une vente supprimée est donc, elle aussi, retirée de la vélocité.
+
 ### 5.4 Commande fournisseur : création, validation et réception
 
 ```mermaid
@@ -521,7 +524,7 @@ sequenceDiagram
 
     loop Pour chaque produit sous le seuil
         DS->>MSR: sumSortiesDepuis(produitId, aujourd'hui - 14 jours)
-        MSR-->>DS: Somme des quantités vendues sur la période
+        MSR-->>DS: Somme des quantités vendues sur la période, hors ventes annulées
         DS->>DS: calculerVelociteVente = somme / 14
         alt Vélocité > 0
             DS->>DS: joursAvantRupture = ceil(quantité actuelle / vélocité)
@@ -538,6 +541,14 @@ sequenceDiagram
 ```
 
 **Note sur la formule retenue :** la vélocité de vente est une moyenne glissante simple (quantité totale sortie sur 14 jours ÷ 14), sans pondération ni lissage. Elle ne tient donc pas compte de la saisonnalité ni des tendances (un produit dont les ventes accélèrent ou ralentissent nettement sur la période sera mal estimé), et un produit récemment mis en catalogue sans historique de vente ne peut pas être estimé du tout — l'application l'indique alors explicitement plutôt que d'afficher un chiffre trompeur. Le résultat est arrondi au jour supérieur (`Math.ceil`), le parti pris étant qu'il est préférable d'alerter légèrement trop tôt que de laisser croire à une marge plus large que la réalité.
+
+**Exclusion des ventes annulées :** une annulation ne supprime pas la sortie de stock de la vente ; elle ajoute une entrée de stock en sens inverse. Sans précaution, une vente annulée gonflerait donc la vélocité. `sumSortiesDepuis` écarte chaque sortie `"Vente - Commande #N"` pour laquelle il existe, sur le même produit, une entrée `"Annulation - Commande #N"`. L'appariement se fait vente par vente, d'après le numéro de commande, plutôt qu'en retranchant toutes les entrées « Annulation » de la période :
+
+- une vente faite pendant la fenêtre de 14 jours puis annulée n'est pas comptée, quelle que soit la date de l'annulation ;
+- l'annulation, pendant la fenêtre, d'une vente antérieure à la fenêtre ne retranche rien : la vélocité ne peut pas devenir négative, ni être sous-estimée par une vente qui n'y figurait pas ;
+- une entrée de stock saisie à la main avec exactement le motif `"Annulation - Commande #N"` serait prise pour une annulation de la commande N sur ce produit. Le risque est faible, car il faudrait recopier le motif automatique à l'identique, numéro et produit compris.
+
+La requête dépend donc du format des motifs posés par `CommandeServiceImpl`. Si ces motifs changent, il faut adapter `sumSortiesDepuis`. `DashboardCommandesAnnuleesTest` échoue si l'appariement ne fonctionne plus.
 
 ### 5.6 Journal d'audit — consultation
 
@@ -693,7 +704,7 @@ Les images référencées ci-dessous sont disponibles dans le dossier [`screensh
 
 ![Tableau de bord clair](../screenshots/Capture%20d'%C3%A9cran%202026-08-08%20165647.png)
 
-Vue d'ensemble du tableau de bord : compteurs globaux (clients, produits, commandes, chiffre d'affaires avec variation par rapport au mois précédent), puis répartition du chiffre d'affaires par période (journalier, hebdomadaire, mensuel, annuel), et enfin trois indicateurs qualitatifs (meilleur client, produit le plus vendu, catégorie la plus populaire). Ces données sont calculées côté serveur par `DashboardServiceImpl` et exposées via `DashboardController`.
+Vue d'ensemble du tableau de bord : compteurs globaux (clients, produits, commandes, chiffre d'affaires avec variation par rapport au mois précédent), puis répartition du chiffre d'affaires par période (journalier, hebdomadaire, mensuel, annuel), et enfin trois indicateurs qualitatifs (meilleur client, produit le plus vendu, catégorie la plus populaire). Ces données sont calculées côté serveur par `DashboardServiceImpl` et exposées via `DashboardController`. La carte « Commandes » compte les commandes valides (statut `VALIDE`, ou sans statut pour les commandes antérieures à son introduction) : les commandes annulées en sont exclues, comme du chiffre d'affaires affiché à côté et des autres indicateurs de vente (voir §3.2).
 
 **Vue générale — indicateurs clés (mode sombre)**
 
@@ -892,12 +903,13 @@ Deux suites de tests automatisés accompagnent le code applicatif, l'une par cou
 |---|---|---|
 | `JwtServiceTest` | 4 | Génération et validation d'un token ; refus de démarrer sans clé JWT ou avec une clé de moins de 32 caractères ; acceptation d'une clé de 32 caractères |
 | `DashboardServiceImplTest` | 5 | Calcul de vélocité de vente et estimation du délai avant rupture, y compris le cas « aucune vente récente » |
+| `DashboardCommandesAnnuleesTest` | 2 | Sur la base H2 de test, à travers les vrais services : une commande annulée n'entre ni dans le nombre de commandes, ni dans le chiffre d'affaires (global, par période, sur 12 mois), ni dans le meilleur client, les top produits ou les ventes par catégorie, alors qu'une commande sans statut y entre ; une vente annulée ne change pas la vélocité de vente |
 | `NotificationServiceImplTest` | 4 | Aucun email envoyé si la liste de ruptures est vide ; séparation de l'email entre « rupture imminente » (moins de 5) et « stock bas » (5 à 9) ; expéditeur renseigné quand `alerte.stock.expediteur` est défini, absent quand elle est vide |
 | `MontantFcfaTest` | 2 | Même format pour une vente (« 400000.00 ») et un achat (« 1500000 ») : « 400 000 FCFA », « 1 500 000 FCFA » ; arrondi, zéro et montant négatif |
 | `SecurityAutorisationsTest` | 15 | Matrice des droits de §4.2, rôle par rôle (`@WithMockUser`), sur la base H2 de test : refus 403 des actions interdites, accès aux actions permises, refus sans authentification, seeder inactif en test |
 | `OpenApiConfigTest` | 1 | Documentation OpenAPI (`/v3/api-docs`) accessible sans token, schéma `bearerAuth` (HTTP, bearer, JWT) appliqué à l'API, `POST /auth/login` exempté (voir §4.1) |
 
-À l'exécution (`mvn test`), la suite backend passe : 39 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
+À l'exécution (`mvn test`), la suite backend passe : 41 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
 
 Les deux suites sont rejouées par GitHub Actions à chaque push et pull request vers `main` : `ci-backend.yml` lance `./mvnw test` sur la base H2 en mémoire, puis le packaging ; `ci-frontend.yml` installe les dépendances (`npm ci`) sous Node 22, lance les tests Vitest, puis le build de production Angular.
 
