@@ -80,7 +80,8 @@ public class DashboardServiceImpl implements DashboardService {
     public DashboardStatsDTO getStats() {
         long totalClients = clientRepository.count();
         long totalProduits = produitRepository.count();
-        long totalCommandes = commandeRepository.count();
+        // Commandes annulées exclues, comme pour le chiffre d'affaires affiché à côté.
+        long totalCommandes = commandeRepository.countNonAnnulees();
         return new DashboardStatsDTO(
                 totalClients,
                 totalProduits,
