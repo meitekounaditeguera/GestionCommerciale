@@ -14,6 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -53,8 +54,10 @@ public class DashboardServiceImpl implements DashboardService {
     // devient très sensible à un pic ponctuel (une grosse commande isolée peut faire croire à
     // une vélocité bien supérieure à la réalité) ; une fenêtre plus longue lisse ce bruit au
     // prix d'une réactivité moindre face à un changement récent de la demande. 14 jours est un
-    // compromis raisonnable pour un commerce de détail, à ajuster selon le retour du terrain.
-    private static final int PERIODE_VELOCITE_JOURS = 14;
+    // compromis raisonnable pour un commerce de détail, à ajuster selon le retour du terrain :
+    // la fenêtre se règle par la propriété dashboard.velocite.jours (variable d'environnement
+    // VELOCITE_FENETRE_JOURS), 14 jours si elle n'est pas définie.
+    public static final int PERIODE_VELOCITE_JOURS_PAR_DEFAUT = 14;
 
     private static final DateTimeFormatter LIBELLE_MOIS = DateTimeFormatter.ofPattern("MMM yyyy", Locale.FRENCH);
 
@@ -63,17 +66,29 @@ public class DashboardServiceImpl implements DashboardService {
     private final CommandeRepository commandeRepository;
     private final LigneCommandeRepository ligneCommandeRepository;
     private final MouvementStockRepository mouvementStockRepository;
+    private final int periodeVelociteJours;
 
     public DashboardServiceImpl(ClientRepository clientRepository,
             ProduitRepository produitRepository,
             CommandeRepository commandeRepository,
             LigneCommandeRepository ligneCommandeRepository,
-            MouvementStockRepository mouvementStockRepository) {
+            MouvementStockRepository mouvementStockRepository,
+            @Value("${dashboard.velocite.jours:" + PERIODE_VELOCITE_JOURS_PAR_DEFAUT + "}") int periodeVelociteJours) {
+        // Une fenêtre de 0 jour (ou négative) rendrait la vélocité incalculable (division par
+        // zéro) : on refuse de démarrer plutôt que d'afficher des estimations absurdes.
+        if (periodeVelociteJours < 1) {
+            throw new IllegalStateException(
+                    "Fenêtre de vélocité de vente invalide (dashboard.velocite.jours = "
+                            + periodeVelociteJours + "). Définir la variable d'environnement "
+                            + "VELOCITE_FENETRE_JOURS avec un nombre de jours supérieur ou égal à 1 "
+                            + "(14 par défaut).");
+        }
         this.clientRepository = clientRepository;
         this.produitRepository = produitRepository;
         this.commandeRepository = commandeRepository;
         this.ligneCommandeRepository = ligneCommandeRepository;
         this.mouvementStockRepository = mouvementStockRepository;
+        this.periodeVelociteJours = periodeVelociteJours;
     }
 
     @Override
@@ -135,7 +150,7 @@ public class DashboardServiceImpl implements DashboardService {
         return resultat;
     }
 
-    // Quantité moyenne vendue par jour sur les PERIODE_VELOCITE_JOURS derniers jours, à partir
+    // Quantité moyenne vendue par jour sur les periodeVelociteJours derniers jours, à partir
     // des sorties de stock réellement enregistrées (mouvements liés à une vente). 0 si aucune
     // vente sur la période, plutôt qu'une division par zéro.
     // Limite assumée : ne tient pas compte de la saisonnalité ni des tendances (un produit qui
@@ -143,7 +158,7 @@ public class DashboardServiceImpl implements DashboardService {
     // estimé) ; c'est une moyenne glissante simple, pas un modèle prédictif.
     public double calculerVelociteVente(Long produitId) {
 
-        LocalDateTime depuis = LocalDateTime.now().minusDays(PERIODE_VELOCITE_JOURS);
+        LocalDateTime depuis = LocalDateTime.now().minusDays(periodeVelociteJours);
         Long totalSorties = mouvementStockRepository.sumSortiesDepuis(produitId, depuis);
         long sorties = totalSorties != null ? totalSorties : 0L;
 
@@ -151,7 +166,7 @@ public class DashboardServiceImpl implements DashboardService {
             return 0.0;
         }
 
-        return (double) sorties / PERIODE_VELOCITE_JOURS;
+        return (double) sorties / periodeVelociteJours;
     }
 
     // Estime le nombre de jours restants avant épuisement du stock (quantité actuelle /
