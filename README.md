@@ -164,6 +164,7 @@ Sans `JWT_SECRET`, ou avec une clé de moins de 32 caractères, l'application re
 | `ALERTE_STOCK_EXPEDITEUR` | non | Adresse « From » de l'alerte. Vide par défaut : le serveur SMTP utilise le compte authentifié (`MAIL_USERNAME`) |
 | `ALERTE_STOCK_CRON` | non | Planification de l'alerte (par défaut `0 0 8 * * *`, tous les jours à 8h) |
 | `FACTURE_STOCKAGE_DOSSIER` | non | Dossier d'archivage des factures PDF (par défaut `./factures`) |
+| `VELOCITE_FENETRE_JOURS` | non | Nombre de jours de ventes pris en compte pour estimer le délai avant rupture dans le tableau de bord (propriété `dashboard.velocite.jours`, par défaut `14`). Une valeur inférieure à 1 empêche l'application de démarrer |
 
 **Comptes utilisateurs :** aucun compte n'est créé automatiquement en production. Les comptes `admin`, `gestionnaire` et `caissier` et leurs mots de passe publics n'existent qu'en profil `dev`. Créez les comptes manuellement dans la table `utilisateurs`. Le mot de passe doit y être haché avec BCrypt, et le rôle doit valoir `ADMIN`, `GESTIONNAIRE` ou `CAISSIER` :
 

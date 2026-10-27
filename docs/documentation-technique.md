@@ -523,9 +523,9 @@ sequenceDiagram
     PR-->>DS: Liste des produits actifs sous le seuil, triée par quantité croissante
 
     loop Pour chaque produit sous le seuil
-        DS->>MSR: sumSortiesDepuis(produitId, aujourd'hui - 14 jours)
+        DS->>MSR: sumSortiesDepuis(produitId, aujourd'hui - N jours)
         MSR-->>DS: Somme des quantités vendues sur la période, hors ventes annulées
-        DS->>DS: calculerVelociteVente = somme / 14
+        DS->>DS: calculerVelociteVente = somme / N
         alt Vélocité > 0
             DS->>DS: joursAvantRupture = ceil(quantité actuelle / vélocité)
         else Vélocité = 0 (aucune vente récente)
@@ -540,11 +540,13 @@ sequenceDiagram
     UI-->>Utilisateur: Affiche l'alerte avec délai estimé, ou "vélocité insuffisante pour estimer" si indéterminé
 ```
 
-**Note sur la formule retenue :** la vélocité de vente est une moyenne glissante simple (quantité totale sortie sur 14 jours ÷ 14), sans pondération ni lissage. Elle ne tient donc pas compte de la saisonnalité ni des tendances (un produit dont les ventes accélèrent ou ralentissent nettement sur la période sera mal estimé), et un produit récemment mis en catalogue sans historique de vente ne peut pas être estimé du tout — l'application l'indique alors explicitement plutôt que d'afficher un chiffre trompeur. Le résultat est arrondi au jour supérieur (`Math.ceil`), le parti pris étant qu'il est préférable d'alerter légèrement trop tôt que de laisser croire à une marge plus large que la réalité.
+**Fenêtre de calcul :** N vaut 14 jours par défaut. Il se règle par la propriété `dashboard.velocite.jours`, alimentée par la variable d'environnement `VELOCITE_FENETRE_JOURS` (voir la section Configuration du README). Une fenêtre courte suit mieux la demande récente mais réagit fortement à une grosse commande isolée ; une fenêtre longue lisse ce bruit mais réagit plus lentement à un changement de la demande. Une valeur inférieure à 1 rendrait le calcul impossible (division par zéro) : `DashboardServiceImpl` la refuse dès sa création, et l'application ne démarre pas (`IllegalStateException` qui nomme la propriété, la valeur reçue et `VELOCITE_FENETRE_JOURS`). Une valeur non numérique est refusée de la même façon par Spring au démarrage, avec une erreur de conversion.
+
+**Note sur la formule retenue :** la vélocité de vente est une moyenne glissante simple (quantité totale sortie sur N jours ÷ N), sans pondération ni lissage. Elle ne tient donc pas compte de la saisonnalité ni des tendances (un produit dont les ventes accélèrent ou ralentissent nettement sur la période sera mal estimé), et un produit récemment mis en catalogue sans historique de vente ne peut pas être estimé du tout — l'application l'indique alors explicitement plutôt que d'afficher un chiffre trompeur. Le résultat est arrondi au jour supérieur (`Math.ceil`), le parti pris étant qu'il est préférable d'alerter légèrement trop tôt que de laisser croire à une marge plus large que la réalité.
 
 **Exclusion des ventes annulées :** une annulation ne supprime pas la sortie de stock de la vente ; elle ajoute une entrée de stock en sens inverse. Sans précaution, une vente annulée gonflerait donc la vélocité. `sumSortiesDepuis` écarte chaque sortie `"Vente - Commande #N"` pour laquelle il existe, sur le même produit, une entrée `"Annulation - Commande #N"`. L'appariement se fait vente par vente, d'après le numéro de commande, plutôt qu'en retranchant toutes les entrées « Annulation » de la période :
 
-- une vente faite pendant la fenêtre de 14 jours puis annulée n'est pas comptée, quelle que soit la date de l'annulation ;
+- une vente faite pendant la fenêtre de N jours puis annulée n'est pas comptée, quelle que soit la date de l'annulation ;
 - l'annulation, pendant la fenêtre, d'une vente antérieure à la fenêtre ne retranche rien : la vélocité ne peut pas devenir négative, ni être sous-estimée par une vente qui n'y figurait pas ;
 - une entrée de stock saisie à la main avec exactement le motif `"Annulation - Commande #N"` serait prise pour une annulation de la commande N sur ce produit. Le risque est faible, car il faudrait recopier le motif automatique à l'identique, numéro et produit compris.
 
@@ -652,7 +654,7 @@ Ce diagramme illustre le processus métier global reliant la vente (qui consomme
 flowchart TD
     START([Début]) --> CHECK{Stock du produit\nsous le seuil ?}
     CHECK -- Non --> VENTE[Prise de commande client]
-    CHECK -- Oui --> ESTIMATION[Estimation du délai avant rupture\nà partir de la vélocité de vente sur 14 jours]
+    CHECK -- Oui --> ESTIMATION[Estimation du délai avant rupture\nà partir de la vélocité de vente sur N jours, 14 par défaut]
     ESTIMATION --> ALERTE[Alerte affichée au tableau de bord]
     ALERTE --> CRON{Job planifié\nquotidien 8h00}
     CRON -- Déclenché --> EMAIL[Envoi d'un email récapitulatif\naux produits concernés]
@@ -716,7 +718,7 @@ Le même écran en thème sombre, géré par `theme.service.ts` côté frontend 
 
 ![Graphiques et alertes de stock](../screenshots/Capture%20d'%C3%A9cran%202026-08-11%20173853.png)
 
-Partie basse du tableau de bord : évolution du chiffre d'affaires sur 12 mois (courbe Chart.js), répartition des ventes par catégorie (graphique en anneau), classement des 10 produits les plus vendus, nombre de nouveaux clients sur 30 jours, et alertes de stock à deux niveaux distincts — **« Rupture imminente »** (moins de 5 unités) en rouge et **« Stock bas »** (de 5 à 9 unités) en orange. Un produit n'est signalé qu'à partir de 9 unités ou moins ; les mêmes seuils sont appliqués par la liste des produits et par l'email d'alerte (`StockSeuils` côté serveur, `stock-seuils.ts` côté interface). Le délai avant épuisement affiché (ex. « Épuisement estimé : ~42 jours ») n'est plus un texte générique : il est calculé à partir de la vélocité de vente réelle du produit sur les 14 derniers jours (voir §5.5 pour le détail du calcul). Lorsque l'historique de ventes récent est insuffisant pour estimer un rythme fiable, l'application l'indique explicitement (« Vélocité de vente insuffisante pour estimer ») plutôt que d'afficher un chiffre trompeur.
+Partie basse du tableau de bord : évolution du chiffre d'affaires sur 12 mois (courbe Chart.js), répartition des ventes par catégorie (graphique en anneau), classement des 10 produits les plus vendus, nombre de nouveaux clients sur 30 jours, et alertes de stock à deux niveaux distincts — **« Rupture imminente »** (moins de 5 unités) en rouge et **« Stock bas »** (de 5 à 9 unités) en orange. Un produit n'est signalé qu'à partir de 9 unités ou moins ; les mêmes seuils sont appliqués par la liste des produits et par l'email d'alerte (`StockSeuils` côté serveur, `stock-seuils.ts` côté interface). Le délai avant épuisement affiché (ex. « Épuisement estimé : ~42 jours ») n'est plus un texte générique : il est calculé à partir de la vélocité de vente réelle du produit sur les 14 derniers jours par défaut (fenêtre réglable par `VELOCITE_FENETRE_JOURS`, voir §5.5 pour le détail du calcul). Lorsque l'historique de ventes récent est insuffisant pour estimer un rythme fiable, l'application l'indique explicitement (« Vélocité de vente insuffisante pour estimer ») plutôt que d'afficher un chiffre trompeur.
 
 ### 7.3 Gestion des clients
 
@@ -902,14 +904,14 @@ Deux suites de tests automatisés accompagnent le code applicatif, l'une par cou
 | Classe | Tests | Ce qui est couvert |
 |---|---|---|
 | `JwtServiceTest` | 4 | Génération et validation d'un token ; refus de démarrer sans clé JWT ou avec une clé de moins de 32 caractères ; acceptation d'une clé de 32 caractères |
-| `DashboardServiceImplTest` | 5 | Calcul de vélocité de vente et estimation du délai avant rupture, y compris le cas « aucune vente récente » |
+| `DashboardServiceImplTest` | 7 | Calcul de vélocité de vente et estimation du délai avant rupture, y compris le cas « aucune vente récente », avec la fenêtre par défaut (14 jours) puis une fenêtre de 7 jours ; refus d'une fenêtre inférieure à 1 jour |
 | `DashboardCommandesAnnuleesTest` | 2 | Sur la base H2 de test, à travers les vrais services : une commande annulée n'entre ni dans le nombre de commandes, ni dans le chiffre d'affaires (global, par période, sur 12 mois), ni dans le meilleur client, les top produits ou les ventes par catégorie, alors qu'une commande sans statut y entre ; une vente annulée ne change pas la vélocité de vente |
 | `NotificationServiceImplTest` | 4 | Aucun email envoyé si la liste de ruptures est vide ; séparation de l'email entre « rupture imminente » (moins de 5) et « stock bas » (5 à 9) ; expéditeur renseigné quand `alerte.stock.expediteur` est défini, absent quand elle est vide |
 | `MontantFcfaTest` | 2 | Même format pour une vente (« 400000.00 ») et un achat (« 1500000 ») : « 400 000 FCFA », « 1 500 000 FCFA » ; arrondi, zéro et montant négatif |
 | `SecurityAutorisationsTest` | 15 | Matrice des droits de §4.2, rôle par rôle (`@WithMockUser`), sur la base H2 de test : refus 403 des actions interdites, accès aux actions permises, refus sans authentification, seeder inactif en test |
 | `OpenApiConfigTest` | 1 | Documentation OpenAPI (`/v3/api-docs`) accessible sans token, schéma `bearerAuth` (HTTP, bearer, JWT) appliqué à l'API, `POST /auth/login` exempté (voir §4.1) |
 
-À l'exécution (`mvn test`), la suite backend passe : 41 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
+À l'exécution (`mvn test`), la suite backend passe : 43 tests, tous au vert. Ce total inclut aussi `DtoValidationTest` (4), `ValidationErreurApiTest` (2) et `BackendApplicationTests` (2). Côté frontend (`npm test -- --watch=false`), la suite passe également : 15 fichiers de tests, 58 tests, tous au vert.
 
 Les deux suites sont rejouées par GitHub Actions à chaque push et pull request vers `main` : `ci-backend.yml` lance `./mvnw test` sur la base H2 en mémoire, puis le packaging ; `ci-frontend.yml` installe les dépendances (`npm ci`) sous Node 22, lance les tests Vitest, puis le build de production Angular.
 
